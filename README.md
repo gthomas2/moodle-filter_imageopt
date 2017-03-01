@@ -23,6 +23,10 @@ The filter settings area available via Site administration / Plugins / Filters /
 
 By default, the optimiser both place holds (load when visible) and resizes (maximum image width) to 800px.
 
+## Videos
+
+[Load on visible feature](https://youtu.be/TC5iyoUYw1A)
+
 ## Copyright
 
 (c) Guy Thomas 2017
