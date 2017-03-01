@@ -41,5 +41,5 @@ if ($ADMIN->fulltree) {
     }
     $choices[999] = get_string('donotloadonvisible', 'filter_imageopt');
     $settings->add(new admin_setting_configselect('filter_imageopt/loadonvisible', get_string('loadonvisible', 'filter_imageopt'),
-        get_string('loadonvisibledesc', 'filter_imageopt'), 0, $choices));
+        get_string('loadonvisibledesc', 'filter_imageopt'), 5, $choices));
 }
