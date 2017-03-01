@@ -1,0 +1,10 @@
+img[data-loadonvisible] {
+    border: 1px solid #ddd;
+}
+
+img[data-loadonvisible] {
+    background-image: url([[pix:filter_imageopt|image]]);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 120px 120px;
+}

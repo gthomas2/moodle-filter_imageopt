@@ -1,0 +1,7 @@
+{
+  "extends": "../../.eslintrc",
+  "globals": {
+    "$": false,
+    "console": false
+  }
+}
