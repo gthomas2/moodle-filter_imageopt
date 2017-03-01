@@ -70,9 +70,9 @@ define(['jquery'],
                 var appeartopoffset = $element.data('appear-top-offset') || (options.appeartopoffset || 0);
                 var appearleftoffset = $element.data('appear-left-offset') || (options.appearleftoffset || 0);
 
-                if (top + $element.height() >= window_top &&
+                if (top + $element.height() + appeartopoffset >= window_top &&
                     top - appeartopoffset <= window_top + $window.height() &&
-                    left + $element.width() >= window_left &&
+                    left + $element.width() + appearleftoffset >= window_left &&
                     left - appearleftoffset <= window_left + $window.width()) {
                     return true;
                 } else {

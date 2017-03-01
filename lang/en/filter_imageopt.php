@@ -25,3 +25,6 @@ $string['maxwidth'] = 'Maximum image width';
 $string['maxwidthdesc'] = 'Maximum image width in pixels';
 $string['loadonvisible'] = 'Load when visible';
 $string['loadonvisibledesc'] = 'Delay loading of images until visible';
+$string['donotloadonvisible'] = 'No placeholding, load immediately';
+$string['loadonvisibilityall'] = 'All images';
+$string['loadonvisibilityafter'] = 'After {$a} image(s)';

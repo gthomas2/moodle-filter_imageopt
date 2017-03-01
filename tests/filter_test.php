@@ -179,7 +179,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $this->setAdminUser();
 
         set_config('maxwidth','480','filter_imageopt');
-        set_config('loadonvisible','1','filter_imageopt');
+        set_config('loadonvisible','0','filter_imageopt'); // 0 applies load on visible to all images.
 
         $fixturefile = 'testpng_2880x1800.png';
 
@@ -260,6 +260,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $context = context_helper::instance_by_id($file->get_contextid());
 
         // Test filter plugin img, no lazy load.
+        set_config('loadonvisible','999','filter_imageopt'); // 999 does not lazy load any images.
         $filter = new filter_imageopt($context, []);
         $filtered = $filter->filter($labeltxt);
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';
@@ -271,7 +272,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $this->assertNotContains('<img data-loadonvisible="'.$prefilterurl, $filtered);
 
         // Test filter plugin img,  lazy load.
-        set_config('loadonvisible','1','filter_imageopt');
+        set_config('loadonvisible','0','filter_imageopt');
         $filter = new filter_imageopt($context, []);
         $filtered = $filter->filter($labeltxt);
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';

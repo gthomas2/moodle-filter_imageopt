@@ -33,10 +33,14 @@ define(['filter_imageopt/appear'],
                             var imgurl = $(this).data('loadonvisible');
                             $(this).attr('src', imgurl);
                             $(this).removeAttr('data-loadonvisible');
+                            $(this).addClass('imageopt_loading');
+                            $(this).on('load', function() {
+                                $(this).removeClass('imageopt_loading');
+                            });
                         });
                     });
                     // Appear configuration - start loading images when they are out of the view port by 400px.
-                    var appearConf = {appeartopoffset : 400, appearleftoffset : 400};
+                    var appearConf = {appeartopoffset : 100, appearleftoffset : 100};
                     $('img[data-loadonvisible]').appear(appearConf);
                     $.force_appear();
 

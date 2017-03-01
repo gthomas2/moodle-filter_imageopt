@@ -95,6 +95,14 @@ EOF;
         global $PAGE, $CFG;
 
         static $jsloaded = false;
+        static $imgcount = 0;
+
+        $imgcount ++;
+
+        // This is so we can make the first couple of images load immediately without placeholding.
+        if ($imgcount <= $this->config->loadonvisible) {
+            return $this->process_image_src($match);
+        }
 
         if (!$jsloaded) {
             $PAGE->requires->js_call_amd('filter_imageopt/imageopt', 'init');
@@ -109,6 +117,8 @@ EOF;
             return ($img);
         }
 
+        $maxwidth = $this->config->maxwidth;
+
         // Does the img have a width or height attribute? If not get it from image file and add it.
         if (stripos($match[0], 'width=') === false || stripos($match[0], 'height=') === false) {
             $file = $this->get_img_file($match[3]);
@@ -121,6 +131,11 @@ EOF;
             }
             $width = $imageinfo->width;
             $height = $imageinfo->height;
+            if ($width > $maxwidth) {
+                $ratio = $height / $width;
+                $width = $maxwidth;
+                $height = $width * $ratio;
+            }
             $img = str_ireplace('<img ', '<img width="'.$width.'" height="'.$height.'"', $img);
         } else {
             $doc = new DOMDocument();
@@ -128,6 +143,11 @@ EOF;
             $els = $doc->getElementsByTagName('img')[0];
             $width = $els->getAttribute('width');
             $height = $els->getAttribute('height');
+            if ($width > $maxwidth) {
+                $ratio = $height / $width;
+                $width = $maxwidth;
+                $height *= $ratio;
+            }
         }
 
         // Replace img src attribute and add data-loadonvisible.
@@ -137,7 +157,6 @@ EOF;
             $loadonvisible =$match[2];
         } else {
             $filename = $file->get_filename();
-            $pathinfo = pathinfo($filename);
             $contextid = $file->get_contextid();
             $component = $file->get_component();
             $area = $file->get_filearea();
@@ -204,7 +223,8 @@ EOF;
      */
     public function filter($text, array $options = array()) {
         $filtered = $text; // We need to return the original value if regex fails!
-        if (!empty($this->config->loadonvisible)) {
+
+        if (empty($this->config->loadonvisible) || empty($this->config->loadonvisible) < 999) {
             $search = self::REGEXP_IMGSRC;
             $filtered = preg_replace_callback($search, 'self::apply_loadonvisible', $filtered);
         } else {

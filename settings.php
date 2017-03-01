@@ -33,6 +33,13 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configselect('filter_imageopt/maxwidth', get_string('maxwidth', 'filter_imageopt'),
         get_string('maxwidthdesc', 'filter_imageopt'), 2, $choices));
 
-    $settings->add(new admin_setting_configcheckbox('filter_imageopt/loadonvisible', get_string('loadonvisible', 'filter_imageopt'),
-        get_string('loadonvisibledesc', 'filter_imageopt'), 1));
+    $choices = [
+        0 => get_string('loadonvisibilityall', 'filter_imageopt')
+    ];
+    for ($c = 0; $c < 10; $c++) {
+        $choices[$c+1] = get_string('loadonvisibilityafter', 'filter_imageopt', $c+1);
+    }
+    $choices[999] = get_string('donotloadonvisible', 'filter_imageopt');
+    $settings->add(new admin_setting_configselect('filter_imageopt/loadonvisible', get_string('loadonvisible', 'filter_imageopt'),
+        get_string('loadonvisibledesc', 'filter_imageopt'), 0, $choices));
 }
