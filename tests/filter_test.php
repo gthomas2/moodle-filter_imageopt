@@ -93,7 +93,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $this->resetAfterTest();
         $this->setAdminUser();
 
-        set_config('maxwidth','480','filter_imageopt');
+        set_config('maxwidth', '480', 'filter_imageopt');
 
         $fixturefile = 'testpng_2880x1800.png';
         $context = context_system::instance();
@@ -115,7 +115,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         $maxwidth = 480;
         set_config('maxwidth', $maxwidth, 'filter_imageopt');
-        $newheight = (400/800) * $maxwidth;
+        $newheight = (400 / 800) * $maxwidth;
 
         $context = context_system::instance();
         $filter = new filter_imageopt($context, []);
@@ -229,8 +229,8 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         $maxwidth = 480;
 
-        set_config('maxwidth', $maxwidth,'filter_imageopt');
-        set_config('loadonvisible','0','filter_imageopt'); // 0 applies load on visible to all images.
+        set_config('maxwidth', $maxwidth, 'filter_imageopt');
+        set_config('loadonvisible', '0', 'filter_imageopt'); // 0 applies load on visible to all images.
 
         $fixturefile = 'testpng_2880x1800.png';
 
@@ -279,7 +279,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         $maxwidth = 480;
 
-        set_config('maxwidth', $maxwidth,'filter_imageopt');
+        set_config('maxwidth', $maxwidth, 'filter_imageopt');
 
         $fixturefile = 'testpng_2880x1800.png';
 
@@ -316,7 +316,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $context = context_helper::instance_by_id($file->get_contextid());
 
         // Test filter plugin img, no lazy load.
-        set_config('loadonvisible','999','filter_imageopt'); // 999 does not lazy load any images.
+        set_config('loadonvisible', '999', 'filter_imageopt'); // 999 does not lazy load any images.
         $filter = new filter_imageopt($context, []);
         $filtered = $filter->filter($labeltxt);
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';
@@ -328,7 +328,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $this->assertNotContains('data-loadonvisible="'.$prefilterurl, $filtered);
 
         // Test filter plugin img,  lazy load.
-        set_config('loadonvisible','0','filter_imageopt');
+        set_config('loadonvisible', '0', 'filter_imageopt');
         $filter = new filter_imageopt($context, []);
         $filtered = $filter->filter($labeltxt);
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';

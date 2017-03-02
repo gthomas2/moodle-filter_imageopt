@@ -23,6 +23,8 @@
 
 use filter_imageopt\image;
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Serves any files associated with the image optimiser filter
  *
@@ -51,7 +53,6 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
     $fs = get_file_storage();
     $file = $fs->get_file($context->id, $component, $filearea, $item, '/', $filename);
     $originalts = $file->get_timemodified();
-
 
     $imageinfo = (object) $file->get_imageinfo();
     if ($imageinfo->width <= $maxwidth) {

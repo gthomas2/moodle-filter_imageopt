@@ -37,7 +37,7 @@ class filter_imageopt extends moodle_text_filter {
 
     const REGEXP_IMGSRC = '/<img\s[^\>]*(src=["|\']((?:.*)(pluginfile.php(?:.*)))["|\'])(?:.*)>/isU';
 
-    function __construct(context $context, array $localconfig) {
+    public function __construct(context $context, array $localconfig) {
         global $CFG;
 
         require_once($CFG->libdir.'/filelib.php');
@@ -74,12 +74,14 @@ class filter_imageopt extends moodle_text_filter {
     }
 
     private function empty_image($width, $height) {
+        // @codingStandardsIgnoreStart
         $svg = <<<EOF
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="$width" height="$height" viewBox="0 0 $width $height">
 </svg>
 EOF;
+        // @codingStandardsIgnoreEnd
 
         return $svg;
     }
@@ -140,7 +142,7 @@ EOF;
      * @return string
      */
     private function apply_loadonvisible(array $match) {
-        global $PAGE, $CFG;
+        global $PAGE;
 
         static $jsloaded = false;
         static $imgcount = 0;
@@ -180,15 +182,13 @@ EOF;
         $height = $imageinfo->height;
         $img = $this->img_add_width_height($img, $width, $height);
 
-
         // Replace img src attribute and add data-loadonvisible.
         if (!$file) {
-            $loadonvisible =$match[2];
+            $loadonvisible = $match[2];
         } else {
 
             $loadonvisible = $this->imageopturl($file);
         }
-
 
         $img = str_ireplace('<img ', '<img data-loadonvisible="'.$loadonvisible.'" ', $img);
         $img = str_ireplace($match[1], 'src="data:image/svg+xml;utf8,'.s($this->empty_image($width, $height)).'"', $img);
