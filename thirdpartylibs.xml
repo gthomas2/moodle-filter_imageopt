@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <libraries>
   <library>
-    <location>amd/src.appear.js</location>
+    <location>amd/src/appear.js</location>
     <name>Jquery appear plugin</name>
     <license>MIT</license>
     <version>0.3.6</version>
