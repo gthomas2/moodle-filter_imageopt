@@ -40,25 +40,24 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
         throw new coding_exception('Bad image url, args should contain item id and original component');
     }
 
-    $config = get_config('filter_imageopt');
-
     $item = $args[0];
     $component = $args[1];
-    $filename = $args[2];
+    $maxwidth = $args[2];
+    $filename = $args[3];
     $pathinfo = pathinfo($filename);
-    $resizename = $pathinfo['filename'].'_opt'.'.'.$pathinfo['extension'];
+
+    $resizename = $pathinfo['filename'].'_opt_'.$maxwidth.'.'.$pathinfo['extension'];
 
     $fs = get_file_storage();
     $file = $fs->get_file($context->id, $component, $filearea, $item, '/', $filename);
     $originalts = $file->get_timemodified();
 
-    $maxwidth = $config->maxwidth;
+
     $imageinfo = (object) $file->get_imageinfo();
     if ($imageinfo->width <= $maxwidth) {
         send_stored_file($file, null, 0, false);
         return true;
     }
-
 
     $resizedfile = $fs->get_file($context->id, $component, $filearea, $item, '/', $resizename);
     // Make sure resized file is fresh.

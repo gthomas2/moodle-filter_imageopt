@@ -84,6 +84,55 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
     }
 
     /**
+     * Test image opt url is created as expected.
+     * @throws dml_exception
+     */
+    public function test_imageopturl() {
+        global $CFG;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        set_config('maxwidth','480','filter_imageopt');
+
+        $fixturefile = 'testpng_2880x1800.png';
+        $context = context_system::instance();
+
+        $file = $this->std_file_record($context, $fixturefile);
+        $filter = new filter_imageopt($context, []);
+
+        $url = test_util::call_restricted_method($filter, 'imageopturl', [$file]);
+
+        $expected = new moodle_url(
+            $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/filter_imageopt/'.$file->get_filearea().'/'.
+            $file->get_itemid().'/'.$file->get_component().'/480'.
+            '/'.$file->get_filename());
+        $this->assertEquals($expected, $url);
+    }
+
+    public function test_img_add_width_height() {
+        $this->resetAfterTest();
+
+        $maxwidth = 480;
+        set_config('maxwidth', $maxwidth, 'filter_imageopt');
+        $newheight = (400/800) * $maxwidth;
+
+        $context = context_system::instance();
+        $filter = new filter_imageopt($context, []);
+
+        $img = '<img src="test" width="800" height="400" />';
+        $img = test_util::call_restricted_method($filter, 'img_add_width_height', [$img, 800, 400]);
+
+        $expected = '<img src="test" width="480" height="'.$newheight.'" />';
+        $this->assertEquals($expected, $img);
+
+        $img = '<img src="test" />';
+        $expected = '<img width="480" height="'.$newheight.'" src="test" />';
+        $img = test_util::call_restricted_method($filter, 'img_add_width_height', [$img, 800, 400]);
+        $this->assertEquals($expected, $img);
+    }
+
+    /**
      * Create moodle file.
      * @param context $context
      * @param string $fixturefile name of fixture file
@@ -178,7 +227,9 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $this->resetAfterTest();
         $this->setAdminUser();
 
-        set_config('maxwidth','480','filter_imageopt');
+        $maxwidth = 480;
+
+        set_config('maxwidth', $maxwidth,'filter_imageopt');
         set_config('loadonvisible','0','filter_imageopt'); // 0 applies load on visible to all images.
 
         $fixturefile = 'testpng_2880x1800.png';
@@ -195,7 +246,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $str = test_util::call_restricted_method($filter, 'apply_loadonvisible', [$matches]);
 
         $loadonvisibleurl = $CFG->wwwroot.'/pluginfile.php/'.$file->get_contextid().'/filter_imageopt/'.
-            $file->get_filearea().'/0/'.$file->get_component().'/'.$fixturefile;
+            $file->get_filearea().'/0/'.$file->get_component().'/'.$maxwidth.'/'.$fixturefile;
 
         // Test filter plugin img, lazy load.
         $this->assertContains('<img data-loadonvisible="'.$loadonvisibleurl.'"', $str);
@@ -205,13 +256,14 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * @param stored_file $file
+     * @param int $maxwidth;
      * @return string.
      */
-    private function filter_imageopt_url_from_file(stored_file $file) {
+    private function filter_imageopt_url_from_file(stored_file $file, $maxwidth) {
         global $CFG;
 
         $url = $CFG->wwwroot.'/pluginfile.php/'.$file->get_contextid().'/filter_imageopt/'.$file->get_filearea().'/'.
-                $file->get_itemid().'/'.$file->get_component().'/'.$file->get_filename();
+                $file->get_itemid().'/'.$file->get_component().'/'.$maxwidth.'/'.$file->get_filename();
 
         return $url;
     }
@@ -220,12 +272,14 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
      * Test processing image src.
      * @throws coding_exception
      */
-    public function test_process_image_src() {
+    public function test_process_image_tag() {
 
         $this->resetAfterTest();
         $this->setAdminUser();
 
-        set_config('maxwidth','480','filter_imageopt');
+        $maxwidth = 480;
+
+        set_config('maxwidth', $maxwidth,'filter_imageopt');
 
         $fixturefile = 'testpng_2880x1800.png';
 
@@ -235,9 +289,9 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         $filter = new filter_imageopt($context, []);
 
-        $processed = test_util::call_restricted_method($filter, 'process_image_src', [$matches]);
-        $postfilterurl = $this->filter_imageopt_url_from_file($file);
-        $this->assertContains('<img src="'.$postfilterurl, $processed);
+        $processed = test_util::call_restricted_method($filter, 'process_image_tag', [$matches]);
+        $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
+        $this->assertContains('src="'.$postfilterurl, $processed);
 
     }
 
@@ -251,7 +305,9 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $this->resetAfterTest();
         $this->setAdminUser();
 
-        set_config('maxwidth','480','filter_imageopt');
+        $maxwidth = 480;
+
+        set_config('maxwidth', $maxwidth, 'filter_imageopt');
 
         $fixturefile = 'testpng_2880x1800.png';
 
@@ -265,11 +321,11 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $filtered = $filter->filter($labeltxt);
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';
         $this->assertContains($prefilterurl, $labeltxt);
-        $postfilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/filter_imageopt/intro/0/mod_label/testpng_2880x1800.png';
-        $this->assertContains('<img src="'.$postfilterurl, $filtered);
-        $this->assertNotContains('<img src="'.$prefilterurl, $filtered);
-        $this->assertNotContains('<img data-loadonvisible="'.$postfilterurl, $filtered);
-        $this->assertNotContains('<img data-loadonvisible="'.$prefilterurl, $filtered);
+        $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
+        $this->assertContains('src="'.$postfilterurl, $filtered);
+        $this->assertNotContains('src="'.$prefilterurl, $filtered);
+        $this->assertNotContains('data-loadonvisible="'.$postfilterurl, $filtered);
+        $this->assertNotContains('data-loadonvisible="'.$prefilterurl, $filtered);
 
         // Test filter plugin img,  lazy load.
         set_config('loadonvisible','0','filter_imageopt');
@@ -277,10 +333,10 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $filtered = $filter->filter($labeltxt);
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';
         $this->assertContains($prefilterurl, $labeltxt);
-        $postfilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/filter_imageopt/intro/0/mod_label/testpng_2880x1800.png';
-        $this->assertContains('<img data-loadonvisible="'.$postfilterurl, $filtered);
-        $this->assertNotContains('<img data-loadonvisible="'.$prefilterurl, $filtered);
-        $this->assertNotContains('<img src="'.$postfilterurl, $filtered);
-        $this->assertNotContains('<img src="'.$prefilterurl, $filtered);
+        $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
+        $this->assertContains('data-loadonvisible="'.$postfilterurl, $filtered);
+        $this->assertNotContains('data-loadonvisible="'.$prefilterurl, $filtered);
+        $this->assertNotContains('src="'.$postfilterurl, $filtered);
+        $this->assertNotContains('src="'.$prefilterurl, $filtered);
     }
 }

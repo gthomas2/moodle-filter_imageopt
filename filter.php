@@ -58,19 +58,16 @@ class filter_imageopt extends moodle_text_filter {
         $contextid = urldecode($tmparr[1]);
         $component = urldecode($tmparr[2]);
 
-        if ($component === 'mod_label' || $component === 'mod_resource') {
-            if (count($tmparr) === 5) {
-                $area = urldecode($tmparr[3]);
-                $item = 0;
-                $filename = urldecode($tmparr[4]);
-            } else {
-                $area = urldecode($tmparr[3]);
-                $item = urldecode($tmparr[4]);
-                $filename = urldecode($tmparr[5]);
-            }
-        } else {
-            return false;
+        if (count($tmparr) === 5) {
+            $area = urldecode($tmparr[3]);
+            $item = 0;
+            $filename = urldecode($tmparr[4]);
+        } else if (count($tmparr) === 6) {
+            $area = urldecode($tmparr[3]);
+            $item = urldecode($tmparr[4]);
+            $filename = urldecode($tmparr[5]);
         }
+
         $fs = get_file_storage();
         $file = $fs->get_file($contextid, $component, $area, $item, '/', $filename);
         return $file;
@@ -88,6 +85,57 @@ EOF;
     }
 
     /**
+     * Create image optimised url for image file.
+     * @param stored_file $file original file
+     * @return moodle_url
+     */
+    private function imageopturl($file) {
+        global $CFG;
+        $maxwidth = $this->config->maxwidth;
+        $filename = $file->get_filename();
+        $contextid = $file->get_contextid();
+        $component = $file->get_component();
+        $area = $file->get_filearea();
+        $item = $file->get_itemid();
+        return new moodle_url(
+            $CFG->wwwroot.'/pluginfile.php/'.$contextid.'/filter_imageopt/'.$area.'/'.$item.'/'.$component.'/'.$maxwidth.
+                    '/'.$filename
+        );
+    }
+
+    /**
+     * Add width and height to img tag and return modified tag with width and height
+     * @param string $img
+     * @param int $width
+     * @param int $height
+     * @return string
+     * @throws file_exception
+     */
+    private function img_add_width_height($img, $width, $height) {
+        $maxwidth = $this->config->maxwidth;
+
+        if ($width > $maxwidth) {
+            $ratio = $height / $width;
+            $width = $maxwidth;
+            $height = $width * $ratio;
+        } else {
+            return $img;
+        }
+
+        $matches = [];
+        $regex = '/(?<=img )(?:|.*)(width(?:|\s)=(?:|\s)"(|\d*)")(?:|.*)(height(?:|\s)=(?:|\s)"(|\d*)")/';
+        $match = preg_match($regex, $img, $matches);
+        if ($match) {
+            $img = str_ireplace($matches[1], 'width="'.$width.'"', $img);
+            $img = str_ireplace($matches[3], 'height="'.$height.'"', $img);
+        } else {
+            $img = str_ireplace('<img ', '<img width="'.$width.'" height="'.$height.'" ', $img);
+        }
+
+        return $img;
+    }
+
+    /**
      * @param array $match (0 - full img tag, 1 src tag and contents, 2 - contents of src, 3 - pluginfile.php/)
      * @return string
      */
@@ -101,7 +149,7 @@ EOF;
 
         // This is so we can make the first couple of images load immediately without placeholding.
         if ($imgcount <= $this->config->loadonvisible) {
-            return $this->process_image_src($match);
+            return $this->process_image_tag($match);
         }
 
         if (!$jsloaded) {
@@ -119,49 +167,26 @@ EOF;
 
         $maxwidth = $this->config->maxwidth;
 
-        // Does the img have a width or height attribute? If not get it from image file and add it.
-        if (stripos($match[0], 'width=') === false || stripos($match[0], 'height=') === false) {
-            $file = $this->get_img_file($match[3]);
-            if (!$file) {
-                return $img;
-            }
-            $imageinfo = (object) $file->get_imageinfo();
-            if (!$imageinfo) {
-                return ($match[0]);
-            }
-            $width = $imageinfo->width;
-            $height = $imageinfo->height;
-            if ($width > $maxwidth) {
-                $ratio = $height / $width;
-                $width = $maxwidth;
-                $height = $width * $ratio;
-            }
-            $img = str_ireplace('<img ', '<img width="'.$width.'" height="'.$height.'"', $img);
-        } else {
-            $doc = new DOMDocument();
-            $doc->loadHTML($img);
-            $els = $doc->getElementsByTagName('img')[0];
-            $width = $els->getAttribute('width');
-            $height = $els->getAttribute('height');
-            if ($width > $maxwidth) {
-                $ratio = $height / $width;
-                $width = $maxwidth;
-                $height *= $ratio;
-            }
+        $file = $this->get_img_file($match[3]);
+
+        if (!$file) {
+            return $img;
         }
+        $imageinfo = (object) $file->get_imageinfo();
+        if (!$imageinfo) {
+            return ($img);
+        }
+        $width = $imageinfo->width;
+        $height = $imageinfo->height;
+        $img = $this->img_add_width_height($img, $width, $height);
+
 
         // Replace img src attribute and add data-loadonvisible.
-
-        $file = $this->get_img_file($match[3]);
         if (!$file) {
             $loadonvisible =$match[2];
         } else {
-            $filename = $file->get_filename();
-            $contextid = $file->get_contextid();
-            $component = $file->get_component();
-            $area = $file->get_filearea();
-            $item = $file->get_itemid();
-            $loadonvisible = new moodle_url($CFG->wwwroot.'/pluginfile.php/'.$contextid.'/filter_imageopt/'.$area.'/'.$item.'/'.$component.'/'.$filename);
+
+            $loadonvisible = $this->imageopturl($file);
         }
 
 
@@ -175,9 +200,7 @@ EOF;
      * @param array $match (0 - full img tag, 1 src tag and contents, 2 - contents of src, 3 - pluginfile.php/)
      * @return string
      */
-    private function process_image_src($match) {
-
-        global $CFG;
+    private function process_image_tag($match) {
 
         if (stripos($match[2], '_opt') !== false) {
             // Already processed.
@@ -187,7 +210,6 @@ EOF;
         raise_memory_limit(MEMORY_EXTRA);
 
         $file = $this->get_img_file($match[3]);
-
         if (!$file) {
             return $match[0];
         }
@@ -197,21 +219,20 @@ EOF;
             return $match[0];
         }
 
+        $width = $imageinfo->width;
+        $height = $imageinfo->height;
+
         $maxwidth = $this->config->maxwidth;
 
         if ($imageinfo->width < $maxwidth) {
             return $match[0];
         }
 
-        $filename = $file->get_filename();
-        $contextid = $file->get_contextid();
-        $component = $file->get_component();
-        $area = $file->get_filearea();
-        $item = $file->get_itemid();
+        $newsrc = $this->imageopturl($file);
 
-        $newsrc = new moodle_url($CFG->wwwroot.'/pluginfile.php/'.$contextid.'/filter_imageopt/'.$area.'/'.$item.'/'.$component.'/'.$filename);
+        $img = $this->img_add_width_height($match[0], $width, $height);
 
-        return str_replace($match[2], $newsrc, $match[0]);
+        return str_replace($match[2], $newsrc, $img);
     }
 
     /**
@@ -224,12 +245,12 @@ EOF;
     public function filter($text, array $options = array()) {
         $filtered = $text; // We need to return the original value if regex fails!
 
-        if (empty($this->config->loadonvisible) || empty($this->config->loadonvisible) < 999) {
+        if (empty($this->config->loadonvisible) || $this->config->loadonvisible < 999) {
             $search = self::REGEXP_IMGSRC;
             $filtered = preg_replace_callback($search, 'self::apply_loadonvisible', $filtered);
         } else {
             $search = self::REGEXP_IMGSRC;
-            $filtered = preg_replace_callback($search, 'self::process_image_src', $filtered);
+            $filtered = preg_replace_callback($search, 'self::process_image_tag', $filtered);
         }
 
         if (empty($filtered)) {

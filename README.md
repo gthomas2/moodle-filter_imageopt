@@ -1,6 +1,15 @@
 # Image optimiser filter
 The image optimiser filter is intended to solve the issue of high resolution images slowing down (and blocking) page
 loads.
+
+Features:
+
+* Resize images that are greater than a maximum width and preserve aspect ratios and original images.
+* Resizes images in all filterable text - course content, user profile description, etc.
+* Allow for delayed loading of images (load when visible) with the option of specifying how many images should be loaded
+immediately before images are placeheld and loaded when in the view port and the page has fully loaded (eliminates
+blocking for other resources, e.g. javascript in the footer).
+
 Example scenarios:
 
 * Course designer doesn't know how to resize images prior to upload and uploads a 6 mega pixel image when they don't
@@ -26,6 +35,7 @@ By default, the optimiser both place holds (load when visible) and resizes (maxi
 ## Videos
 
 [Load on visible feature](https://youtu.be/TC5iyoUYw1A)
+[Non destructive resizing](https://youtu.be/JRdLumnr_rk)
 
 ## Copyright
 
