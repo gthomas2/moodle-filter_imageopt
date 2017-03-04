@@ -16,6 +16,7 @@
 
 /**
  * Main library for image optimiser filter.
+ * @package   filter_imageopt
  * @author    Guy Thomas <brudinie@gmail.com>
  * @copyright Copyright (c) 2017 Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later

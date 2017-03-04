@@ -14,20 +14,30 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace filter_imageopt;
-
-defined('MOODLE_INTERNAL') || die();
-
 /**
- * Testing utility
+ * Testing utility.
+ * Allows for private / protected properties to be called against an object for php unit testing purposes.
+ * @package   filter_imageopt
  * @author    Guy Thomas <gthomas@moodlerooms.com>
  * @copyright Copyright (c) 2017 Blackboard Inc.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace filter_imageopt;
+
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Testing utility class.
+ * @package   filter_imageopt
+ * @author    Guy Thomas <gthomas@moodlerooms.com>
+ * @copyright Copyright (c) 2017 Blackboard Inc.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class test_util {
 
     /**
+     * Call a private / protected method against an object.
      * @param string|mixed $object
      * @param string $method
      * @param array $args

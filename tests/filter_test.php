@@ -16,6 +16,7 @@
 
 /**
  * Tests for filter class
+ * @package   filter_imageopt
  * @author    Guy Thomas <gthomas@moodlerooms.com>
  * @copyright Guy Thomas 2017.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -30,6 +31,13 @@ global $CFG;
 require_once($CFG->dirroot . '/files/externallib.php');
 require_once(__DIR__.'/../filter.php');
 
+/**
+ * Tests for filter class
+ * @package   filter_imageopt
+ * @author    Guy Thomas <gthomas@moodlerooms.com>
+ * @copyright Guy Thomas 2017.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
@@ -110,6 +118,10 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $this->assertEquals($expected, $url);
     }
 
+    /**
+     * Test img_add_width_height function.
+     * @throws dml_exception
+     */
     public function test_img_add_width_height() {
         $this->resetAfterTest();
 
@@ -255,6 +267,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
     }
 
     /**
+     * Get the replacement imageopt filter image url for a stored_file.
      * @param stored_file $file
      * @param int $maxwidth;
      * @return string.

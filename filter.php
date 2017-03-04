@@ -16,6 +16,7 @@
 
 /**
  * Image optimiser
+ * @package   filter_imageopt
  * @author    Guy Thomas <gthomas@moodlerooms.com>
  * @copyright Copyright (c) Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,14 +28,21 @@ use filter_imageopt\image;
 
 /**
  * Image optimiser - main filter class.
+ * @package   filter_imageopt
  * @author    Guy Thomas <brudinie@gmail.com>
  * @copyright Copyright (c) Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class filter_imageopt extends moodle_text_filter {
 
+    /**
+     * @var stdClass - filter config
+     */
     private $config;
 
+    /**
+     * Regex to extract and process img.
+     */
     const REGEXP_IMGSRC = '/<img\s[^\>]*(src=["|\']((?:.*)(pluginfile.php(?:.*)))["|\'])(?:.*)>/isU';
 
     public function __construct(context $context, array $localconfig) {
@@ -138,6 +146,7 @@ EOF;
     }
 
     /**
+     * Place hold images so that they are loaded when visible.
      * @param array $match (0 - full img tag, 1 src tag and contents, 2 - contents of src, 3 - pluginfile.php/)
      * @return string
      */
@@ -197,6 +206,7 @@ EOF;
     }
 
     /**
+     * Process the image tag so that it has the new resize url and appropriate width / height settings.
      * @param array $match (0 - full img tag, 1 src tag and contents, 2 - contents of src, 3 - pluginfile.php/)
      * @return string
      */
@@ -238,8 +248,8 @@ EOF;
     /**
      * Filter content.
      *
-     * @param $text HTML to be processed.
-     * @param $options
+     * @param string $text HTML to be processed.
+     * @param array $options
      * @return string String containing processed HTML.
      */
     public function filter($text, array $options = array()) {

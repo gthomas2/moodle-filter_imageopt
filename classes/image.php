@@ -14,18 +14,30 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace filter_imageopt;
-
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir.'/gdlib.php');
-
 /**
  * Image processing.
  *
  * Provides image resizing functionality.
  *
- * @package   theme_snap
+ * @package   filter_imageopt
+ * @copyright Copyright (c) 2015 Moodlerooms Inc. (http://www.moodlerooms.com)
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+namespace filter_imageopt;
+
+defined('MOODLE_INTERNAL') || die();
+
+use stored_file;
+
+require_once($CFG->libdir.'/gdlib.php');
+
+/**
+ * Image processing class.
+ *
+ * Provides image resizing functionality.
+ *
+ * @package   filter_imageopt
  * @copyright Copyright (c) 2015 Moodlerooms Inc. (http://www.moodlerooms.com)
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -34,17 +46,13 @@ class image {
      * Shame that this was nicked from gdlib.php and that there isn't a function I could have used from there.
      * Creates a resized version of image and stores copy in file area
      *
-     * @param context $context
-     * @param string $component
-     * @param string filearea
-     * @param int $itemid
      * @param stored_file $originalfile
      * @param int $newwidth;
      * @param int $newheight;
      * @return stored_file
      */
     public static function resize (
-        \stored_file $originalfile,
+        stored_file $originalfile,
         $resizefilename = false,
         $newwidth = false,
         $newheight = false,
