@@ -35,7 +35,14 @@ By default, the optimiser both place holds (load when visible) and resizes (maxi
 ## Videos
 
 [Load on visible feature](https://youtu.be/TC5iyoUYw1A)
+
 [Non destructive resizing](https://youtu.be/JRdLumnr_rk)
+
+[Mobile page load speed WITHOUT image optimiser](https://youtu.be/3JYRfjxNTig)
+
+[Mobile page load speed WITH image optimiser](https://youtu.be/cU0xYC6v0GY)
+
+Note, the page is ready in half the time when the filter is enabled!
 
 ## Copyright
 
