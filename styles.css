@@ -3,7 +3,7 @@ img.imageopt_loading {
     background-position: center;
     background-repeat: no-repeat;
     background-size: 120px 120px;
-    border: 1px solid #ddd;
+    box-shadow: 0 0 0 1px #ddd inset;
     animation: anim_imageopt_loading 5s infinite;
 }
 
