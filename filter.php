@@ -253,6 +253,10 @@ EOF;
      * @return string String containing processed HTML.
      */
     public function filter($text, array $options = array()) {
+        if (!stripos($text, '<img') || !strpos($text, 'pluginfile.php')) {
+            return $text;
+        }
+
         $filtered = $text; // We need to return the original value if regex fails!
 
         if (empty($this->config->loadonvisible) || $this->config->loadonvisible < 999) {
