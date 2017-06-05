@@ -184,7 +184,7 @@ EOF;
             return $img;
         }
         $imageinfo = (object) $file->get_imageinfo();
-        if (!$imageinfo) {
+        if (!$imageinfo || !isset($imageinfo->width)) {
             return ($img);
         }
         $width = $imageinfo->width;
@@ -225,7 +225,7 @@ EOF;
         }
 
         $imageinfo = (object) $file->get_imageinfo();
-        if (empty($imageinfo)) {
+        if (empty($imageinfo) || !isset($imageinfo->width)) {
             return $match[0];
         }
 
