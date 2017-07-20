@@ -91,6 +91,8 @@ class filter_imageopt extends moodle_text_filter {
 EOF;
         // @codingStandardsIgnoreEnd
 
+        $svg = str_replace("\n", ' ', $svg); // Strip new lines from svg so that it can be used in URLs.
+
         return $svg;
     }
 
