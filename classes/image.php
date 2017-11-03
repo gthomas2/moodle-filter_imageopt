@@ -42,6 +42,17 @@ require_once($CFG->libdir.'/gdlib.php');
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class image {
+
+    /**
+     * Always preserve a width attribute already in an image tag.
+     */
+    const WIDTHATTPRESERVE = 0;
+
+    /**
+     * Only preserve a width attribute if it's less than the maximum width.
+     */
+    const WIDTHATTPRSERVELTMAX = 1;
+
     /**
      * Shame that this was nicked from gdlib.php and that there isn't a function I could have used from there.
      * Creates a resized version of image and stores copy in file area

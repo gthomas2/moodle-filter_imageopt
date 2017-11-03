@@ -28,3 +28,7 @@ $string['loadonvisibledesc'] = 'Delay loading of images until visible';
 $string['donotloadonvisible'] = 'No placeholding, load immediately';
 $string['loadonvisibilityall'] = 'All images';
 $string['loadonvisibilityafter'] = 'After {$a} image(s)';
+$string['widthattribute'] = 'Image width attribute';
+$string['widthattributedesc'] = 'How should existing image width attributes be dealt with';
+$string['widthattpreserve'] = 'Preserve user width attributes in all cases';
+$string['widthattpreserveltmax'] = 'Preserve user width attributes only if less than maximum width';
