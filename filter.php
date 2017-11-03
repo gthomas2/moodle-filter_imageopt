@@ -51,6 +51,11 @@ class filter_imageopt extends moodle_text_filter {
         require_once($CFG->libdir.'/filelib.php');
 
         $this->config = get_config('filter_imageopt');
+        if (!isset($this->config->widthattribute)) {
+            $this->config->widthattribute = image::WIDTHATTPRSERVELTMAX;
+        }
+        $this->config->widthattribute = intval($this->config->widthattribute);
+
         parent::__construct($context, $localconfig);
     }
 
@@ -123,6 +128,25 @@ EOF;
      */
     private function img_add_width_height($img, $width, $height) {
         $maxwidth = $this->config->maxwidth;
+
+        if (stripos($img, ' width') !== false) {
+            if ($this->config->widthattribute === image::WIDTHATTPRSERVELTMAX) {
+                // Note - we cannot check for percentage widths as they are responsively variable.
+                $regex = '/(?<=\<img)(?:.*)width(?:\s|)=(?:"|\')(\d*)(?:px|)(?:"|\')/';
+                $matches = [];
+                preg_match($regex, $img, $matches);
+                if (!empty($matches[1])) {
+                    $checkwidth = $matches[1];
+                    if ($checkwidth < $maxwidth) {
+                        // This image already has a width attribute and that width is less than the max width.
+                        return $img;
+                    }
+                }
+            } else {
+                // Return img tag as is with width preserved.
+                return $img;
+            }
+        }
 
         if ($width > $maxwidth) {
             $ratio = $height / $width;
