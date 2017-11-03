@@ -23,6 +23,11 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+// You can never trust autoloading in settings.php!
+require_once(__DIR__.'/classes/image.php');
+
+use filter_imageopt\image;
+
 if ($ADMIN->fulltree) {
     $choices = [
         480 => '480',
@@ -42,4 +47,12 @@ if ($ADMIN->fulltree) {
     $choices[999] = get_string('donotloadonvisible', 'filter_imageopt');
     $settings->add(new admin_setting_configselect('filter_imageopt/loadonvisible', get_string('loadonvisible', 'filter_imageopt'),
         get_string('loadonvisibledesc', 'filter_imageopt'), 5, $choices));
+
+    $choices = [
+        image::WIDTHATTPRSERVELTMAX => get_string('widthattpreserveltmax', 'filter_imageopt'),
+        image::WIDTHATTPRESERVE => get_string('widthattpreserve', 'filter_imageopt')
+    ];
+    $settings->add(new admin_setting_configselect('filter_imageopt/widthattribute',
+        get_string('widthattribute', 'filter_imageopt'),
+        get_string('widthattributedesc', 'filter_imageopt'), image::WIDTHATTPRSERVELTMAX, $choices));
 }
