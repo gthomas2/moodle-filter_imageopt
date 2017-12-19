@@ -17,7 +17,7 @@
 /**
  * Image optimiser
  * @package   filter_imageopt
- * @author    Guy Thomas <gthomas@moodlerooms.com>
+ * @author    Guy Thomas <brudinie@gmail.com>
  * @copyright Copyright (c) Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -60,7 +60,7 @@ class filter_imageopt extends moodle_text_filter {
     }
 
     /**
-     * Get's an image file from the plugin file path.
+     * Gets an image file from the plugin file path.
      *
      * @param str $pluginfilepath pluginfile.php/
      * @return bool|stored_file
@@ -79,6 +79,14 @@ class filter_imageopt extends moodle_text_filter {
             $area = urldecode($tmparr[3]);
             $item = urldecode($tmparr[4]);
             $filename = urldecode($tmparr[5]);
+        } else if ($component === 'question') {
+            $area = urldecode($tmparr[3]);
+            if ($area === 'export') {
+                return false;
+            }
+            $item = urldecode($tmparr[6]);
+            $filename = urldecode($tmparr[7]);
+
         }
 
         $fs = get_file_storage();
@@ -104,10 +112,14 @@ EOF;
     /**
      * Create image optimised url for image file.
      * @param stored_file $file original file
+     * @param string $origsrc original src.
      * @return moodle_url
      */
-    private function imageopturl($file) {
+    private function imageopturl(stored_file $file, $origsrc) {
         global $CFG;
+        if (!$this->component_resize_supported($file->get_component())) {
+            return $origsrc;
+        }
         $maxwidth = $this->config->maxwidth;
         $filename = $file->get_filename();
         $contextid = $file->get_contextid();
@@ -116,7 +128,7 @@ EOF;
         $item = $file->get_itemid();
         return new moodle_url(
             $CFG->wwwroot.'/pluginfile.php/'.$contextid.'/filter_imageopt/'.$area.'/'.$item.'/'.$component.'/'.$maxwidth.
-                    '/'.$filename
+                    '/'.base64_encode($origsrc).'/'.$filename
         );
     }
 
@@ -172,6 +184,36 @@ EOF;
     }
 
     /**
+     * Determines support for specific component.
+     *
+     * @param string $component
+     * @return boolean
+     */
+    private function component_resize_supported($component) {
+        $componentwhitelist = [
+            'mod_*',
+            'blog',
+            'course',
+            'coursecat',
+            'question',
+            'block_*'
+        ];
+        if (in_array($component, $componentwhitelist)) {
+            return true;
+        }
+        $uscorepos = strpos($component, '_');
+
+        if ($uscorepos) {
+            $wildcarded = substr($component, 0, $uscorepos + 1) . '*';
+            if (in_array($wildcarded, $componentwhitelist)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Place hold images so that they are loaded when visible.
      * @param array $match (0 - full img tag, 1 src tag and contents, 2 - contents of src, 3 - pluginfile.php/)
      * @return string
@@ -218,12 +260,8 @@ EOF;
         $img = $this->img_add_width_height($img, $width, $height);
 
         // Replace img src attribute and add data-loadonvisible.
-        if (!$file) {
-            $loadonvisible = $match[2];
-        } else {
-
-            $loadonvisible = $this->imageopturl($file);
-        }
+        // Note, even if a component isn't supported for resizing, we can still make loading happen on visibility.
+        $loadonvisible = $this->imageopturl($file, $match[2]);
 
         $img = str_ireplace('<img ', '<img data-loadonvisible="'.$loadonvisible.'" ', $img);
         $img = str_ireplace($match[1], 'src="data:image/svg+xml;utf8,'.s($this->empty_image($width, $height)).'"', $img);
@@ -264,7 +302,7 @@ EOF;
             return $match[0];
         }
 
-        $newsrc = $this->imageopturl($file);
+        $newsrc = $this->imageopturl($file, $match[2]);
 
         $img = $this->img_add_width_height($match[0], $width, $height);
 
