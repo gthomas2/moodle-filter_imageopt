@@ -27,16 +27,27 @@ define(['filter_imageopt/appear'],
     function($) {
         return {
             init:function() {
+
+                /**
+                 * Load optimised image.
+                 * @param {Element} el
+                 * @param {string} imgurl
+                 * @returns {void}
+                 */
+                var loadOptimisedImg = function(el, imgurl) {
+                    $(el).attr('src', imgurl);
+                    $(el).removeAttr('data-loadonvisible');
+                    $(el).addClass('imageopt_loading');
+                    $(el).on('load', function() {
+                        $(el).removeClass('imageopt_loading');
+                    });
+                };
+
                 $(document).ready(function() {
                     $(document.body).on('appear', 'img[data-loadonvisible]', function(e, appeared) {
                         appeared.each(function() {
                             var imgurl = $(this).data('loadonvisible');
-                            $(this).attr('src', imgurl);
-                            $(this).removeAttr('data-loadonvisible');
-                            $(this).addClass('imageopt_loading');
-                            $(this).on('load', function() {
-                                $(this).removeClass('imageopt_loading');
-                            });
+                            loadOptimisedImg(this, imgurl);
                         });
                     });
                     // Appear configuration - start loading images when they are out of the view port by 400px.

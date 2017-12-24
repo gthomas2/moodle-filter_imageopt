@@ -23,6 +23,7 @@
  */
 
 use filter_imageopt\image;
+use filter_imageopt\local;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -39,43 +40,71 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool
  */
 function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
-    if (count($args) < 2) {
-        throw new coding_exception('Bad image url, args should contain item id and original component');
-    }
+    global $CFG;
 
-    $item = $args[0];
-    $component = $args[1];
-    $maxwidth = $args[2];
-    $filename = $args[3];
-    $pathinfo = pathinfo($filename);
-
-    $resizename = $pathinfo['filename'].'_opt_'.$maxwidth.'.'.$pathinfo['extension'];
+    $originalsrc = base64_decode(clean_param($args[0], PARAM_ALPHANUMEXT)); // PARAM_BASE64 did not work for me.
+    $imgpath = local::get_img_path_from_src($originalsrc);
+    $originalfile = local::get_img_file($imgpath);
+    $optimisedpath = local::get_optimised_path($imgpath);
+    $optimisedurlpath = local::get_optimised_path($imgpath, false);
 
     $fs = get_file_storage();
-    $file = $fs->get_file($context->id, $component, $filearea, $item, '/', $filename);
-    $originalts = $file->get_timemodified();
 
-    $imageinfo = (object) $file->get_imageinfo();
+    $optimisedfile = local::get_img_file($optimisedpath);
+
+    if ($optimisedfile) {
+        local::file_pluginfile($optimisedurlpath);
+        die;
+    }
+
+    $regex = '/imageopt\/(\d*)/';
+    $matches = [];
+    preg_match($regex, $optimisedpath, $matches);
+    $maxwidth = ($matches[1]);
+    $item = $originalfile->get_itemid();
+    $component = $originalfile->get_component();
+    $filename = $originalfile->get_filename();
+    $filearea = $originalfile->get_filearea();
+    $pathinfo = pathinfo($filename);
+
+    $originalts = $originalfile->get_timemodified();
+
+    $imageinfo = (object) $originalfile->get_imageinfo();
     if ($imageinfo->width <= $maxwidth) {
-        send_stored_file($file, null, 0, false);
-        return true;
+        local::file_pluginfile(local::url_decode_path($imgpath));
+        die;
     }
 
-    $resizedfile = $fs->get_file($context->id, $component, $filearea, $item, '/', $resizename);
     // Make sure resized file is fresh.
-    if ($resizedfile && ($resizedfile->get_timemodified() < $originalts)) {
-        $resizedfile->delete();
-        $resizedfile = false;
-    }
-    if (!$resizedfile) {
-        $resizedfile = image::resize($file, $resizename, $maxwidth);
+    if ($optimisedfile && ($optimisedfile->get_timemodified() < $originalts)) {
+        $optimisedfile->delete();
+        $optimisedfile = false;
     }
 
-    if (!$resizedfile) {
-        send_stored_file($file, null, 0, false);
-        return true;
+    if (!$optimisedfile) {
+
+        $pathcomps = local::explode_img_path($optimisedpath);
+        local::url_decode_path_components($pathcomps);
+
+        $imageoptpos = array_search('imageopt', $pathcomps, true);
+        if ($imageoptpos === false) {
+            local::file_pluginfile(local::url_decode_path($imgpath));
+            die;
+        }
+
+        $filepos = array_search($filename, $pathcomps, true);
+        $length = $filepos - $imageoptpos;
+
+        $optimiseddirpath = '/'.implode('/', array_slice($pathcomps, $imageoptpos, $length)).'/';
+
+        $optimisedfile = image::resize($originalfile, $optimiseddirpath, $filename, $maxwidth);
+    }
+
+    if (!$optimisedfile) {
+        local::file_pluginfile(local::url_decode_path($imgpath));
+        die;
     } else {
-        send_stored_file($resizedfile, null, 0, false);
-        return true;
+        local::file_pluginfile($optimisedurlpath);
+        die;
     }
 }
