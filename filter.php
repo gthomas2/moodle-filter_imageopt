@@ -17,7 +17,7 @@
 /**
  * Image optimiser
  * @package   filter_imageopt
- * @author    Guy Thomas <gthomas@moodlerooms.com>
+ * @author    Guy Thomas <brudinie@gmail.com>
  * @copyright Copyright (c) Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -25,6 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 use filter_imageopt\image;
+use filter_imageopt\local;
 
 /**
  * Image optimiser - main filter class.
@@ -40,11 +41,6 @@ class filter_imageopt extends moodle_text_filter {
      */
     private $config;
 
-    /**
-     * Regex to extract and process img.
-     */
-    const REGEXP_IMGSRC = '/<img\s[^\>]*(src=["|\']((?:.*)(pluginfile.php(?:.*)))["|\'])(?:.*)>/isU';
-
     public function __construct(context $context, array $localconfig) {
         global $CFG;
 
@@ -55,35 +51,11 @@ class filter_imageopt extends moodle_text_filter {
             $this->config->widthattribute = image::WIDTHATTPRSERVELTMAX;
         }
         $this->config->widthattribute = intval($this->config->widthattribute);
-
-        parent::__construct($context, $localconfig);
-    }
-
-    /**
-     * Get's an image file from the plugin file path.
-     *
-     * @param str $pluginfilepath pluginfile.php/
-     * @return bool|stored_file
-     */
-    private function get_img_file($pluginfilepath) {
-        $tmparr = explode('/', $pluginfilepath);
-
-        $contextid = urldecode($tmparr[1]);
-        $component = urldecode($tmparr[2]);
-
-        if (count($tmparr) === 5) {
-            $area = urldecode($tmparr[3]);
-            $item = 0;
-            $filename = urldecode($tmparr[4]);
-        } else if (count($tmparr) === 6) {
-            $area = urldecode($tmparr[3]);
-            $item = urldecode($tmparr[4]);
-            $filename = urldecode($tmparr[5]);
+        if (!isset($this->config->maxwidth)) {
+            $this->config->maxwidth = 480;
         }
 
-        $fs = get_file_storage();
-        $file = $fs->get_file($contextid, $component, $area, $item, '/', $filename);
-        return $file;
+        parent::__construct($context, $localconfig);
     }
 
     private function empty_image($width, $height) {
@@ -97,25 +69,6 @@ EOF;
         // @codingStandardsIgnoreEnd
 
         return $svg;
-    }
-
-    /**
-     * Create image optimised url for image file.
-     * @param stored_file $file original file
-     * @return moodle_url
-     */
-    private function imageopturl($file) {
-        global $CFG;
-        $maxwidth = $this->config->maxwidth;
-        $filename = $file->get_filename();
-        $contextid = $file->get_contextid();
-        $component = $file->get_component();
-        $area = $file->get_filearea();
-        $item = $file->get_itemid();
-        return new moodle_url(
-            $CFG->wwwroot.'/pluginfile.php/'.$contextid.'/filter_imageopt/'.$area.'/'.$item.'/'.$component.'/'.$maxwidth.
-                    '/'.$filename
-        );
     }
 
     /**
@@ -170,11 +123,86 @@ EOF;
     }
 
     /**
+     * Create image optimiser url - will take an original file and resize it then forward on.
+     * @param stored_file $file
+     * @param string $originalsrc
+     * @return moodle_url
+     */
+    public function image_opt_url(stored_file $file, $originalsrc) {
+        global $CFG;
+
+        $maxwidth = $this->config->maxwidth;
+        $filename = $file->get_filename();
+        $contextid = $file->get_contextid();
+
+        $url = $CFG->wwwroot.'/pluginfile.php/'.$contextid.'/filter_imageopt/'.$maxwidth.'/'.
+                base64_encode($originalsrc).'/'.$filename;
+
+        return new moodle_url($url);
+    }
+
+    private function process_img_tag(array $match) {
+        global $CFG;
+
+        $fs = get_file_storage();
+
+        $maxwidth = $this->config->maxwidth;
+
+        $optimisedavailable = false;
+
+        // Don't process images that aren't in this site or don't have a relative path.
+        if (stripos($match[2], $CFG->wwwroot) === false && substr($match[2], 0, 1) != '/') {
+            return $match[0];
+        }
+
+        $file = local::get_img_file($match[3]);
+
+        if (!$file) {
+            return $match[0];
+        }
+
+        // Generally, if anything is being exported then we don't want to mess with it.
+        if ($file->get_filearea() === 'export') {
+            return $match[0];
+        }
+
+        if (stripos($match[3], 'imageopt/'.$maxwidth.'/') !== false) {
+            return $match[0];
+        }
+
+        $imageinfo = (object) $file->get_imageinfo();
+        if ($imageinfo->width <= $maxwidth) {
+            return $match[0];
+        }
+
+        $optimisedpath = local::get_optimised_path($match[3]);
+        $optimisedavailable = local::get_img_file($optimisedpath);
+
+        $originalsrc = $match[2];
+
+        if ($optimisedavailable) {
+            $optimisedsrc = local::get_optimised_src($file, $originalsrc, $optimisedpath);
+        } else {
+            $optimisedsrc = $this->image_opt_url($file, $originalsrc);
+        }
+
+        if (empty($this->config->loadonvisible) || $this->config->loadonvisible < 999) {
+            return $this->apply_loadonvisible($match, $file, $originalsrc, $optimisedsrc, $optimisedavailable);
+        } else {
+            return $this->apply_img_tag($match, $file, $originalsrc, $optimisedsrc);
+        }
+    }
+
+    /**
      * Place hold images so that they are loaded when visible.
      * @param array $match (0 - full img tag, 1 src tag and contents, 2 - contents of src, 3 - pluginfile.php/)
+     * @param stored_file $file
+     * @param string $originalsrc
+     * @param string $optimisedsrc
+     * @param bool $optimisedavailable
      * @return string
      */
-    private function apply_loadonvisible(array $match) {
+    private function apply_loadonvisible(array $match, stored_file $file, $originalsrc, $optimisedsrc, $optimisedavailable = false) {
         global $PAGE;
 
         static $jsloaded = false;
@@ -184,7 +212,7 @@ EOF;
 
         // This is so we can make the first couple of images load immediately without placeholding.
         if ($imgcount <= $this->config->loadonvisible) {
-            return $this->process_image_tag($match);
+            return $this->apply_img_tag($match, $file, $originalsrc, $optimisedsrc);
         }
 
         if (!$jsloaded) {
@@ -196,13 +224,12 @@ EOF;
         // Full image tag + attributes, etc.
         $img = $match[0];
 
+        // If this text already has load on visible applied then just return it.
         if (stripos('data-loadonvisible', $match[0]) !== false) {
             return ($img);
         }
 
         $maxwidth = $this->config->maxwidth;
-
-        $file = $this->get_img_file($match[3]);
 
         if (!$file) {
             return $img;
@@ -219,11 +246,12 @@ EOF;
         if (!$file) {
             $loadonvisible = $match[2];
         } else {
-
-            $loadonvisible = $this->imageopturl($file);
+            $loadonvisible = $optimisedsrc;
         }
 
-        $img = str_ireplace('<img ', '<img data-loadonvisible="'.$loadonvisible.'" ', $img);
+        $optimisedavailable = $optimisedavailable ? 1 : 0;
+
+        $img = str_ireplace('<img ', '<img data-loadonvisible="'.$loadonvisible.'" data-optimised="'.$optimisedavailable.'" ', $img);
         $img = str_ireplace($match[1], 'src="data:image/svg+xml;utf8,'.s($this->empty_image($width, $height)).'"', $img);
 
         return ($img);
@@ -232,18 +260,21 @@ EOF;
     /**
      * Process the image tag so that it has the new resize url and appropriate width / height settings.
      * @param array $match (0 - full img tag, 1 src tag and contents, 2 - contents of src, 3 - pluginfile.php/)
+     * @param stored_file $file
+     * @param string $originalsrc
+     * @param string $optimisedsrc
      * @return string
      */
-    private function process_image_tag($match) {
+    private function apply_img_tag($match, stored_file $file, $originalsrc, $optimisedsrc) {
 
-        if (stripos($match[2], '_opt') !== false) {
+        if (stripos($match[3], 'optimised/') !== false) {
             // Already processed.
             return $match[0];
         }
 
         raise_memory_limit(MEMORY_EXTRA);
 
-        $file = $this->get_img_file($match[3]);
+        $file = local::get_img_file($match[3]);
         if (!$file) {
             return $match[0];
         }
@@ -262,11 +293,15 @@ EOF;
             return $match[0];
         }
 
-        $newsrc = $this->imageopturl($file);
+        $newsrc = $optimisedsrc;
 
         $img = $this->img_add_width_height($match[0], $width, $height);
 
-        return str_replace($match[2], $newsrc, $img);
+        $img = str_replace($match[2], $newsrc, $img);
+
+        $img = str_ireplace('<img ', '<img data-originalsrc="'.$originalsrc.'" ', $img);
+
+        return $img;
     }
 
     /**
@@ -277,19 +312,14 @@ EOF;
      * @return string String containing processed HTML.
      */
     public function filter($text, array $options = array()) {
-        if (!stripos($text, '<img') || !strpos($text, 'pluginfile.php')) {
+        if (stripos($text, '<img') === false || strpos($text, 'pluginfile.php') === false) {
             return $text;
         }
 
         $filtered = $text; // We need to return the original value if regex fails!
 
-        if (empty($this->config->loadonvisible) || $this->config->loadonvisible < 999) {
-            $search = self::REGEXP_IMGSRC;
-            $filtered = preg_replace_callback($search, 'self::apply_loadonvisible', $filtered);
-        } else {
-            $search = self::REGEXP_IMGSRC;
-            $filtered = preg_replace_callback($search, 'self::process_image_tag', $filtered);
-        }
+        $search = local::REGEXP_IMGSRC;
+        $filtered = preg_replace_callback($search, 'self::process_img_tag', $filtered);
 
         if (empty($filtered)) {
             return $text;

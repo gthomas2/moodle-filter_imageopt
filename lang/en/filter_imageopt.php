@@ -16,7 +16,7 @@
 
 /**
  * Image optimiser filter.
- * @author    Guy Thomas <gthomas@moodlerooms.com>
+ * @author    Guy Thomas <brudinie@gmail.com>
  * @copyright Copyright (c) Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
