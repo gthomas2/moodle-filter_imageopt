@@ -16,7 +16,7 @@
 
 /**
  * Image optimiser settings.
- * @author    Guy Thomas <gthomas@moodlerooms.com>
+ * @author    Guy Thomas <brudinie@gmail.com>
  * @copyright Copyright (c) 2017 Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -36,7 +36,7 @@ if ($ADMIN->fulltree) {
         2048 => '2048'
     ];
     $settings->add(new admin_setting_configselect('filter_imageopt/maxwidth', get_string('maxwidth', 'filter_imageopt'),
-        get_string('maxwidthdesc', 'filter_imageopt'), 2, $choices));
+        get_string('maxwidthdesc', 'filter_imageopt'), 480, $choices));
 
     $choices = [
         0 => get_string('loadonvisibilityall', 'filter_imageopt')

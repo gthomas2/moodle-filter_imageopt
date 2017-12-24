@@ -2,6 +2,7 @@ define(['jquery'],
     function(jQuery) {
 
         var $ = jQuery;
+        $(); // This is here to stop linter moaning about unuse.
 
         /*
          * jQuery appear plugin
