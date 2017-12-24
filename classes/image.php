@@ -58,17 +58,24 @@ class image {
      * Creates a resized version of image and stores copy in file area
      *
      * @param stored_file $originalfile
+     * @param string $resizefilepath
+     * @param bool | string $resizefilename
      * @param int $newwidth;
      * @param int $newheight;
      * @return stored_file
      */
     public static function resize (
         stored_file $originalfile,
+        $resizefilepath,
         $resizefilename = false,
         $newwidth = false,
         $newheight = false,
         $jpgquality = 90
     ) {
+
+        if (substr($resizefilepath, -1) !== '/') {
+            $resizefilepath .= '/';
+        }
 
         if ($resizefilename === false) {
             $resizefilename = $originalfile->get_filename();
@@ -91,7 +98,7 @@ class image {
 
         // Create temporary image for processing.
         $tmpimage = tempnam(sys_get_temp_dir(), 'tmpimg');
-        \file_put_contents($tmpimage, $originalfile->get_content());
+        file_put_contents($tmpimage, $originalfile->get_content());
 
         if (!$newheight) {
             $m = $imageinfo->height / $imageinfo->width; // Multiplier to work out $newheight.
@@ -103,47 +110,47 @@ class image {
         $t = null;
         switch ($imageinfo->mimetype) {
             case 'image/gif':
-                if (\function_exists('imagecreatefromgif')) {
-                    $im = \imagecreatefromgif($tmpimage);
+                if (function_exists('imagecreatefromgif')) {
+                    $im = imagecreatefromgif($tmpimage);
                 } else {
-                    \debugging('GIF not supported on this server');
+                    debugging('GIF not supported on this server');
                     unlink ($tmpimage);
                     return false;
                 }
                 // Guess transparent colour from GIF.
-                $transparent = \imagecolortransparent($im);
+                $transparent = imagecolortransparent($im);
                 if ($transparent != -1) {
-                    $t = \imagecolorsforindex($im, $transparent);
+                    $t = imagecolorsforindex($im, $transparent);
                 }
                 break;
             case 'image/jpeg':
-                if (\function_exists('imagecreatefromjpeg')) {
-                    $im = \imagecreatefromjpeg($tmpimage);
+                if (function_exists('imagecreatefromjpeg')) {
+                    $im = imagecreatefromjpeg($tmpimage);
                 } else {
-                    \debugging('JPEG not supported on this server');
+                    debugging('JPEG not supported on this server');
                     unlink ($tmpimage);
                     return false;
                 }
                 // If the user uploads a jpeg them we should process as a jpeg if possible.
-                if (\function_exists('imagejpeg')) {
+                if (function_exists('imagejpeg')) {
                     $imagefnc = 'imagejpeg';
                     $filters = null; // Not used.
                     $quality = $jpgquality;
-                } else if (\function_exists('imagepng')) {
+                } else if (function_exists('imagepng')) {
                     $imagefnc = 'imagepng';
                     $filters = PNG_NO_FILTER;
                     $quality = 1;
                 } else {
-                    \debugging('Jpeg and png not supported on this server, please fix server configuration');
+                    debugging('Jpeg and png not supported on this server, please fix server configuration');
                     unlink ($tmpimage);
                     return false;
                 }
                 break;
             case 'image/png':
-                if (\function_exists('imagecreatefrompng')) {
-                    $im = \imagecreatefrompng($tmpimage);
+                if (function_exists('imagecreatefrompng')) {
+                    $im = imagecreatefrompng($tmpimage);
                 } else {
-                    \debugging('PNG not supported on this server');
+                    debugging('PNG not supported on this server');
                     unlink ($tmpimage);
                     return false;
                 }
@@ -156,59 +163,70 @@ class image {
 
         // The default for all images other than jpegs is to try imagepng first.
         if (empty($imagefnc)) {
-            if (\function_exists('imagepng')) {
+            if (function_exists('imagepng')) {
                 $imagefnc = 'imagepng';
                 $filters = PNG_NO_FILTER;
                 $quality = 1;
-            } else if (\function_exists('imagejpeg')) {
+            } else if (function_exists('imagejpeg')) {
                 $imagefnc = 'imagejpeg';
                 $filters = null; // Not used.
                 $quality = $jpgquality;
             } else {
-                \debugging('Jpeg and png not supported on this server, please fix server configuration');
+                debugging('Jpeg and png not supported on this server, please fix server configuration');
                 return false;
             }
         }
 
-        if (\function_exists('imagecreatetruecolor')) {
-            $newimage = \imagecreatetruecolor($newwidth, $newheight);
+        if (function_exists('imagecreatetruecolor')) {
+            $newimage = imagecreatetruecolor($newwidth, $newheight);
             if ($imageinfo->mimetype != 'image/jpeg' and $imagefnc === 'imagepng') {
                 if ($t) {
                     // Transparent GIF hacking...
-                    $transparentcolour = \imagecolorallocate($newimage , $t['red'] , $t['green'] , $t['blue']);
-                    \imagecolortransparent($newimage , $transparentcolour);
+                    $transparentcolour = imagecolorallocate($newimage , $t['red'] , $t['green'] , $t['blue']);
+                    imagecolortransparent($newimage , $transparentcolour);
                 }
 
-                \imagealphablending($newimage, false);
-                $color = \imagecolorallocatealpha($newimage, 0, 0,  0, 127);
-                \imagefill($newimage, 0, 0,  $color);
-                \imagesavealpha($newimage, true);
+                imagealphablending($newimage, false);
+                $color = imagecolorallocatealpha($newimage, 0, 0,  0, 127);
+                imagefill($newimage, 0, 0,  $color);
+                imagesavealpha($newimage, true);
 
             }
         } else {
-            $newimage = \imagecreate($newwidth, $newheight);
+            $newimage = imagecreate($newwidth, $newheight);
         }
 
-        \imagecopybicubic($newimage, $im, 0, 0, 0, 0, $newwidth, $newheight, $imageinfo->width, $imageinfo->height);
+        imagecopybicubic($newimage, $im, 0, 0, 0, 0, $newwidth, $newheight, $imageinfo->width, $imageinfo->height);
 
-        $fs = \get_file_storage();
+        $fs = get_file_storage();
         $newimageparams = array(
             'contextid' => $contextid,
             'component' => $component,
             'filearea' => $filearea,
             'itemid' => $itemid,
-            'filepath' => '/'
+            'filepath' => $resizefilepath
         );
 
-        \ob_start();
+        $dirs = explode('/', $resizefilepath);
+        $dirpath = '/';
+
+        foreach ($dirs as $dir) {
+            if (empty($dir)) {
+                continue;
+            }
+            $dirpath .= $dir.'/';
+            $fs->create_directory($contextid, $component, $filearea, $itemid, $dirpath);
+        }
+
+        ob_start();
         if (!$imagefnc($newimage, null, $quality, $filters)) {
             return false;
         }
 
-        $data = \ob_get_clean();
-        \imagedestroy($newimage);
+        $data = ob_get_clean();
+        imagedestroy($newimage);
         $newimageparams['filename'] = $resizefilename;
-        if ($resizefilename == $originalfile->get_filename()) {
+        if ($resizefilename === $originalfile->get_filename() && $resizefilepath === $originalfile->get_filepath()) {
             $originalfile->delete();
         }
         $file1 = $fs->create_file_from_string($newimageparams, $data);

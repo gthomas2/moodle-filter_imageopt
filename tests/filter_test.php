@@ -17,14 +17,14 @@
 /**
  * Tests for filter class
  * @package   filter_imageopt
- * @author    Guy Thomas <gthomas@moodlerooms.com>
+ * @author    Guy Thomas <brudinie@gmail.com>
  * @copyright Guy Thomas 2017.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-use filter_imageopt\test_util;
+use filter_imageopt\local;
 
 global $CFG;
 
@@ -34,7 +34,7 @@ require_once(__DIR__.'/../filter.php');
 /**
  * Tests for filter class
  * @package   filter_imageopt
- * @author    Guy Thomas <gthomas@moodlerooms.com>
+ * @author    Guy Thomas <brudinie@gmail.com>
  * @copyright Guy Thomas 2017.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -44,7 +44,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
      * Test regex works with sample img tag + pluginfile.php src.
      */
     public function test_regex() {
-        $regex = filter_imageopt::REGEXP_IMGSRC;
+        $regex = local::REGEXP_IMGSRC;
         $matches = [];
         $img = '<img src="http://www.example.com/moodle/pluginfile.php/236001/mod_label/intro/0/testpng_2880x1800.png"';
         $img .= ' alt="" role="presentation"';
@@ -86,7 +86,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
             [1024, 768]
         ];
         foreach ($sizes as $size) {
-            $emptyimage = test_util::call_restricted_method($filter, 'empty_image', $size);
+            $emptyimage = phpunit_util::call_internal_method($filter, 'empty_image', $size, get_class($filter));
             $this->assertContains('width="'.$size[0].'" height="'.$size[1].'"', $emptyimage);
         }
     }
@@ -109,11 +109,12 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $file = $this->std_file_record($context, $fixturefile);
         $filter = new filter_imageopt($context, []);
 
-        $url = test_util::call_restricted_method($filter, 'imageopturl', [$file]);
+        $originalurl = 'http://somesite/pluginfile.php/somefile.jpg';
+
+        $url = phpunit_util::call_internal_method($filter, 'imageopturl', [$file, $originalurl], get_class($filter));
 
         $expected = new moodle_url(
-            $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/filter_imageopt/'.$file->get_filearea().'/'.
-            $file->get_itemid().'/'.$file->get_component().'/480'.
+            $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/filter_imageopt/480'.'/'.base64_encode($originalurl).
             '/'.$file->get_filename());
         $this->assertEquals($expected, $url);
     }
@@ -133,14 +134,14 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $filter = new filter_imageopt($context, []);
 
         $img = '<img src="test" width="800" height="400" />';
-        $img = test_util::call_restricted_method($filter, 'img_add_width_height', [$img, 800, 400]);
+        $img = phpunit_util::call_internal_method($filter, 'img_add_width_height', [$img, 800, 400], get_class($filter));
 
         $expected = '<img src="test" width="480" height="'.$newheight.'" />';
         $this->assertEquals($expected, $img);
 
         $img = '<img src="test" />';
         $expected = '<img width="480" height="'.$newheight.'" src="test" />';
-        $img = test_util::call_restricted_method($filter, 'img_add_width_height', [$img, 800, 400]);
+        $img = phpunit_util::call_internal_method($filter, 'img_add_width_height', [$img, 800, 400], get_class($filter));
         $this->assertEquals($expected, $img);
     }
 
@@ -196,7 +197,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $filepath = 'pluginfile.php/'.$context->id.'/mod_label/intro/'.$fixturefile;
 
         /** @var stored_file $imgfile */
-        $imgfile = test_util::call_restricted_method($filter, 'get_img_file', [$filepath]);
+        $imgfile = phpunit_util::call_internal_method(null, 'get_img_file', [$filepath], 'filter_imageopt\local');
         $this->assertNotEmpty($imgfile);
         $this->assertEquals($fixturefile, $imgfile->get_filename());
     }
@@ -224,7 +225,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $labeltxt = file_rewrite_pluginfile_urls($label->intro, 'pluginfile.php', $context->id,
                 $file->get_component(), $file->get_filearea(), 0);
         $matches = [];
-        $regex = filter_imageopt::REGEXP_IMGSRC;
+        $regex = local::REGEXP_IMGSRC;
         preg_match($regex, $labeltxt, $matches);
         return [$labeltxt, $matches, $file];
     }
@@ -251,17 +252,24 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         /** @var stored_file $file */
         $file = $file;
 
-        $regex = filter_imageopt::REGEXP_IMGSRC;
+        $filter = new filter_imageopt(context_helper::instance_by_id($file->get_contextid()), []);
+
+        $regex = local::REGEXP_IMGSRC;
         preg_match($regex, $labeltxt, $matches);
 
-        $filter = new filter_imageopt(context_helper::instance_by_id($file->get_contextid()), []);
-        $str = test_util::call_restricted_method($filter, 'apply_loadonvisible', [$matches]);
+        $originalsrc = $matches[2];
+
+        $optimisedsrc = $filter->imageopturl($file, $originalsrc);
+
+        $str = phpunit_util::call_internal_method($filter, 'apply_loadonvisible', [$matches, $file, $originalsrc, $optimisedsrc],
+                get_class($filter));
 
         $loadonvisibleurl = $CFG->wwwroot.'/pluginfile.php/'.$file->get_contextid().'/filter_imageopt/'.
-            $file->get_filearea().'/0/'.$file->get_component().'/'.$maxwidth.'/'.$fixturefile;
+                $maxwidth.'/~base64url~/'.$fixturefile;
 
         // Test filter plugin img, lazy load.
-        $this->assertContains('<img data-loadonvisible="'.$loadonvisibleurl.'"', $str);
+        $regex = '/img data-loadonvisible="'.str_replace('~base64url~', '(?:[A-z|0-9|=]*)', preg_quote($loadonvisibleurl, '/')).'/';
+        $this->assertRegExp($regex, $str);
         $this->assertContains('src="data:image/svg+xml;utf8,', $str);
 
     }
@@ -275,8 +283,8 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
     private function filter_imageopt_url_from_file(stored_file $file, $maxwidth) {
         global $CFG;
 
-        $url = $CFG->wwwroot.'/pluginfile.php/'.$file->get_contextid().'/filter_imageopt/'.$file->get_filearea().'/'.
-                $file->get_itemid().'/'.$file->get_component().'/'.$maxwidth.'/'.$file->get_filename();
+        $url = $CFG->wwwroot.'/pluginfile.php/'.$file->get_contextid().'/filter_imageopt/'.$maxwidth.
+                '/~base64url~/'.$file->get_filename();
 
         return $url;
     }
@@ -285,7 +293,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
      * Test processing image src.
      * @throws coding_exception
      */
-    public function test_process_image_tag() {
+    public function test_apply_img_tag() {
 
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -302,9 +310,15 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         $filter = new filter_imageopt($context, []);
 
-        $processed = test_util::call_restricted_method($filter, 'process_image_tag', [$matches]);
+        $originalsrc = $matches[2];
+        $optimisedsrc = $filter->imageopturl($file, $originalsrc);
+
+        $processed = phpunit_util::call_internal_method($filter, 'apply_img_tag', [$matches, $file, $originalsrc, $optimisedsrc],
+                get_class($filter));
+
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
-        $this->assertContains('src="'.$postfilterurl, $processed);
+        $regex = '/'.str_replace('~base64url~', '(?:[A-z|0-9|=]*)', preg_quote($postfilterurl, '/')).'/';
+        $this->assertRegExp($regex, $processed);
 
     }
 
@@ -335,8 +349,11 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';
         $this->assertContains($prefilterurl, $labeltxt);
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
-        $this->assertContains('src="'.$postfilterurl, $filtered);
-        $this->assertNotContains('src="'.$prefilterurl, $filtered);
+        $regex = '/src="'.str_replace('~base64url~', '(?:[A-z|0-9|=]*)', preg_quote($postfilterurl, '/')).'/';
+        $this->assertRegExp($regex, $filtered);
+
+        // We need a space before src so it doesn't trigger on original-src.
+        $this->assertNotContains(' src="'.$prefilterurl, $filtered);
         $this->assertNotContains('data-loadonvisible="'.$postfilterurl, $filtered);
         $this->assertNotContains('data-loadonvisible="'.$prefilterurl, $filtered);
 
@@ -347,7 +364,10 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';
         $this->assertContains($prefilterurl, $labeltxt);
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
-        $this->assertContains('data-loadonvisible="'.$postfilterurl, $filtered);
+
+        $regex = '/data-loadonvisible="'.str_replace('~base64url~', '(?:[A-z|0-9|=]*)', preg_quote($postfilterurl, '/')).'/';
+        $this->assertRegExp($regex, $filtered);
+
         $this->assertNotContains('data-loadonvisible="'.$prefilterurl, $filtered);
         $this->assertNotContains('src="'.$postfilterurl, $filtered);
         $this->assertNotContains('src="'.$prefilterurl, $filtered);
