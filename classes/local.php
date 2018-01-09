@@ -26,32 +26,74 @@ namespace filter_imageopt;
 
 defined('MOODLE_INTERNAL') || die();
 
+use stored_file;
+
 class local {
 
     const REGEXP_IMGSRC = '/<img\s[^\>]*(src=["|\']((?:.*)(pluginfile.php(?:.*)))["|\'])(?:.*)>/isU';
 
     const REGEXP_SRC = '/(?:.*)(pluginfile.php(?:.*))/';
+
     /**
-     * Get the optimised path for a file path.
+     * Get the optimised path for a file path - this is the path that get's written to the db as a hash.
      * @param type $filepath
      * @return type
      */
     public static function get_optimised_path($filepath) {
         $maxwidth = get_config('filter_imageopt', 'maxwidth');
-
-        $tmparr = explode('/', $filepath);
-        if ($tmparr[0] === 'pluginfile.php') {
-            array_shift($tmparr);
+        if (empty($maxwidth)) {
+            $maxwidth = 480;
         }
 
-        $tmparr[count($tmparr)-1] = 'imageopt/'.$maxwidth.'/'.$tmparr[count($tmparr)-1];
-        $optimisedpath = implode('/', $tmparr);
+        $pathcomps = self::explode_img_path($filepath);
+        self::url_decode_path_components($pathcomps);
+        if (count($pathcomps) > 5) {
+            $component = $pathcomps[1];
+
+            // See if we have component support for this component.
+            $classname = '\\filter_imageopt\\componentsupport\\'.$component;
+            if (class_exists($classname) && method_exists($classname, 'get_optimised_path')) {
+                $optimisedpath = $classname::get_optimised_path($pathcomps, $maxwidth);
+                if ($optimisedpath !== null) {
+                    return $optimisedpath;
+                }
+            }
+        }
+
+        $pathcomps[count($pathcomps)-1] = 'imageopt/'.$maxwidth.'/'.$pathcomps[count($pathcomps)-1];
+        $optimisedpath = implode('/', $pathcomps);
         if (substr($optimisedpath, 0, 1) !== '/') {
             $optimisedpath = '/'.$optimisedpath;
         }
         return $optimisedpath;
     }
 
+    /**
+     * Get optimised src.
+     * @param stored_file $file
+     * @param string $originalsrc
+     * @param string $optimisedpath
+     * @return string
+     */
+    public static function get_optimised_src(\stored_file $file, $originalsrc, $optimisedpath) {
+        global $CFG;
+        $classname = '\\filter_imageopt\\componentsupport\\'.$file->get_component();
+        $optimisedsrc = null;
+        if (class_exists($classname) && method_exists($classname, 'get_optimised_src')) {
+            $optimisedsrc = $classname::get_optimised_src($file, $originalsrc);
+        }
+        if (empty($optimisedsrc)) {
+            $optimisedsrc = new \moodle_url($CFG->wwwroot.'/pluginfile.php'.$optimisedpath);
+        }
+        $optimisedsrc = $optimisedsrc->out();
+        return $optimisedsrc;
+    }
+
+    /**
+     * Gets an img path from image src attribute.
+     * @param type string $src
+     * @return array
+     */
     public static function get_img_path_from_src($src) {
         $matches = [];
 
@@ -61,30 +103,62 @@ class local {
     }
 
     /**
+     * Explode an image path.
+     * @param string $pluginfilepath
+     * @return array
+     */
+    public static function explode_img_path($pluginfilepath) {
+        $tmparr = explode('/', $pluginfilepath);
+        if ($tmparr[0] === 'pluginfile.php') {
+            array_splice($tmparr, 0, 1);
+        } else if ($tmparr[0] === '') {
+            array_splice($tmparr, 0, 1);
+        }
+        return $tmparr;
+    }
+
+    /**
+     * URL decode each component of a path.
+     * @param array $pathcomponents
+     */
+    public static function url_decode_path_components(array &$pathcomponents) {
+        array_walk($pathcomponents, function(&$item, $key) {
+            $item = urldecode($item);
+        });
+    }
+
+    /**
      * Get's an image file from the plugin file path.
      *
      * @param str $pluginfilepath pluginfile.php/
      * @return \stored_file
      */
     public static function get_img_file($pluginfilepath) {
+
         $fs = get_file_storage();
 
-        if (strpos($pluginfilepath, 'pluginfile.php') === 0) {
-            $pluginfilepath = substr($pluginfilepath, strlen('pluginfile.php'));
-        }
+        $pathcomps = self::explode_img_path($pluginfilepath);
+        self::url_decode_path_components($pathcomps);
 
-        $tmparr = explode('/', $pluginfilepath);
+        if (count($pathcomps) > 5) {
+            $component = $pathcomps[1];
 
-        for ($t = 4; $t < count($tmparr); $t++) {
-            $tmparr[$t] = urldecode($tmparr[$t]);
+            // See if we have component support for this component.
+            $classname = '\\filter_imageopt\\componentsupport\\'.$component;
+            if (class_exists($classname) && method_exists($classname, 'get_img_file')) {
+                $file = $classname::get_img_file($pathcomps);
+                if ($file instanceof stored_file) {
+                    return $file;
+                }
+            }
         }
 
         // If no item id then put one in.
-        if (!is_number($tmparr[4])) {
-            $tmparr[4] = '0/'.$tmparr[4];
+        if (!is_number($pathcomps[3])) {
+            array_splice($pathcomps, 3, 0, [0]);
         }
 
-        $path = implode('/', $tmparr);
+        $path = '/'.implode('/', $pathcomps);
 
         $file = $fs->get_file_by_hash(sha1($path));
 

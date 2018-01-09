@@ -51,6 +51,9 @@ class filter_imageopt extends moodle_text_filter {
             $this->config->widthattribute = image::WIDTHATTPRSERVELTMAX;
         }
         $this->config->widthattribute = intval($this->config->widthattribute);
+        if (!isset($this->config->maxwidth)) {
+            $this->config->maxwidth = 480;
+        }
 
         parent::__construct($context, $localconfig);
     }
@@ -127,8 +130,9 @@ EOF;
      * @param string $originalsrc
      * @return moodle_url
      */
-    public function imageopturl(stored_file $file, $originalsrc) {
+    public function image_opt_url(stored_file $file, $originalsrc) {
         global $CFG;
+
         $maxwidth = $this->config->maxwidth;
         $filename = $file->get_filename();
         $contextid = $file->get_contextid();
@@ -148,8 +152,8 @@ EOF;
 
         $optimisedavailable = false;
 
-        // Don't process images that aren't in this site.
-        if (stripos($match[2], $CFG->wwwroot) === false) {
+        // Don't process images that aren't in this site or don't have a relative path.
+        if (stripos($match[2], $CFG->wwwroot) === false && substr($match[2], 0, 1) != '/') {
             return $match[0];
         }
 
@@ -159,19 +163,29 @@ EOF;
             return $match[0];
         }
 
-        if (stripos($match[3], 'imageopt/'.$maxwidth.'/') === false) {
-            $optimisedpath = local::get_optimised_path($match[3]);
-            $pathnamehash = sha1($optimisedpath);
-            $optimisedavailable = $fs->file_exists_by_hash($pathnamehash);
+        // Generally, if anything is being exported then we don't want to mess with it.
+        if ($file->get_filearea() === 'export') {
+            return $match[0];
         }
+
+        if (stripos($match[3], 'imageopt/'.$maxwidth.'/') !== false) {
+            return $match[0];
+        }
+
+        $imageinfo = (object) $file->get_imageinfo();
+        if ($imageinfo->width <= $maxwidth) {
+            return $match[0];
+        }
+
+        $optimisedpath = local::get_optimised_path($match[3]);
+        $optimisedavailable = local::get_img_file($optimisedpath);
 
         $originalsrc = $match[2];
 
         if ($optimisedavailable) {
-            $optimisedsrc = new moodle_url('pluginfile.php'.$optimisedpath);
-            $optimisedsrc = $optimisedsrc->out();
+            $optimisedsrc = local::get_optimised_src($file, $originalsrc, $optimisedpath);
         } else {
-            $optimisedsrc = $this->imageopturl($file, $originalsrc);
+            $optimisedsrc = $this->image_opt_url($file, $originalsrc);
         }
 
         if (empty($this->config->loadonvisible) || $this->config->loadonvisible < 999) {
@@ -300,7 +314,7 @@ EOF;
      * @return string String containing processed HTML.
      */
     public function filter($text, array $options = array()) {
-        if (!stripos($text, '<img') || !strpos($text, 'pluginfile.php')) {
+        if (stripos($text, '<img') === false || strpos($text, 'pluginfile.php') === false) {
             return $text;
         }
 

@@ -40,22 +40,24 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool
  */
 function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
+    global $CFG;
 
-    $src = base64_decode(clean_param($args[0], PARAM_ALPHANUMEXT)); // PARAM_BASE64 did not work for me.
+    $originalsrc = base64_decode(clean_param($args[0], PARAM_ALPHANUMEXT)); // PARAM_BASE64 did not work for me.
 
-    $imgpath = local::get_img_path_from_src($src);
+    $imgpath = local::get_img_path_from_src($originalsrc);
+    $originalfile = local::get_img_file($imgpath);
     $optimisedpath = local::get_optimised_path($imgpath);
-    $optimisedurl = new moodle_url($CFG->wwwroot.str_replace('//' ,'/', '/pluginfile.php/'.$optimisedpath));
+
+    $optimisedsrc = local::get_optimised_src($originalfile, $originalsrc, $optimisedpath);
 
     $fs = get_file_storage();
+
     $optimisedfile = local::get_img_file($optimisedpath);
 
     if ($optimisedfile) {
-        redirect($optimisedurl);
+        redirect($optimisedsrc);
         die;
     }
-
-    $originalfile = local::get_img_file($imgpath);
 
     $regex = '/imageopt\/(\d*)/';
     $matches = [];
@@ -71,8 +73,7 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
 
     $imageinfo = (object) $originalfile->get_imageinfo();
     if ($imageinfo->width <= $maxwidth) {
-        redirect($src);
-        die;
+        redirect($originalsrc);
     }
 
     // Make sure resized file is fresh.
@@ -80,17 +81,28 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
         $optimisedfile->delete();
         $optimisedfile = false;
     }
+
     if (!$optimisedfile) {
-        $spos = strripos($optimisedpath, '/'.$filename);
-        $optimisedpathonly = substr($optimisedpath, 0, $spos);
-        $spos = stripos($optimisedpathonly, '/'.$context->id.'/'.$component.'/'.$filearea);
-        $spos += strlen('/'.$context->id.'/'.$component.'/'.$filearea);
-        $optimisedpathonly = substr($optimisedpathonly, $spos);
-        $optimisedfile = image::resize($originalfile, $optimisedpathonly, $filename, $maxwidth);
+
+        $pathcomps = local::explode_img_path($optimisedpath);
+        local::url_decode_path_components($pathcomps);
+
+        $imageoptpos = array_search('imageopt', $pathcomps, true);
+        if ($imageoptpos === false) {
+            redirect($originalsrc);
+            die;
+        }
+
+        $filepos = array_search($filename, $pathcomps, true);
+        $length = $filepos - $imageoptpos;
+
+        $optimiseddirpath = '/'.implode('/', array_slice($pathcomps, $imageoptpos, $length)).'/';
+
+        $optimisedfile = image::resize($originalfile, $optimiseddirpath, $filename, $maxwidth);
     }
 
     if (!$optimisedfile) {
-        redirect($src);
+        redirect($originalsrc);
         die;
     } else {
         redirect($optimisedurl);

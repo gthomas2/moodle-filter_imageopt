@@ -36,7 +36,7 @@ if ($ADMIN->fulltree) {
         2048 => '2048'
     ];
     $settings->add(new admin_setting_configselect('filter_imageopt/maxwidth', get_string('maxwidth', 'filter_imageopt'),
-        get_string('maxwidthdesc', 'filter_imageopt'), 2, $choices));
+        get_string('maxwidthdesc', 'filter_imageopt'), 480, $choices));
 
     $choices = [
         0 => get_string('loadonvisibilityall', 'filter_imageopt')

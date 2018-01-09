@@ -95,7 +95,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
      * Test image opt url is created as expected.
      * @throws dml_exception
      */
-    public function test_imageopturl() {
+    public function test_image_opt_url() {
         global $CFG;
 
         $this->resetAfterTest();
@@ -111,7 +111,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         $originalurl = 'http://somesite/pluginfile.php/somefile.jpg';
 
-        $url = phpunit_util::call_internal_method($filter, 'imageopturl', [$file, $originalurl], get_class($filter));
+        $url = phpunit_util::call_internal_method($filter, 'image_opt_url', [$file, $originalurl], get_class($filter));
 
         $expected = new moodle_url(
             $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/filter_imageopt/480'.'/'.base64_encode($originalurl).
@@ -259,7 +259,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         $originalsrc = $matches[2];
 
-        $optimisedsrc = $filter->imageopturl($file, $originalsrc);
+        $optimisedsrc = $filter->image_opt_url($file, $originalsrc);
 
         $str = phpunit_util::call_internal_method($filter, 'apply_loadonvisible', [$matches, $file, $originalsrc, $optimisedsrc],
                 get_class($filter));
@@ -311,7 +311,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $filter = new filter_imageopt($context, []);
 
         $originalsrc = $matches[2];
-        $optimisedsrc = $filter->imageopturl($file, $originalsrc);
+        $optimisedsrc = $filter->image_opt_url($file, $originalsrc);
 
         $processed = phpunit_util::call_internal_method($filter, 'apply_img_tag', [$matches, $file, $originalsrc, $optimisedsrc],
                 get_class($filter));
