@@ -36,10 +36,11 @@ class local {
 
     /**
      * Get the optimised path for a file path - this is the path that get's written to the db as a hash.
-     * @param type $filepath
-     * @return type
+     * @param string $filepath
+     * @param bool $asfilepath - if true will return the path for use with the file storage system, not urls.
+     * @return string
      */
-    public static function get_optimised_path($filepath) {
+    public static function get_optimised_path($filepath, $asfilepath = true) {
         $maxwidth = get_config('filter_imageopt', 'maxwidth');
         if (empty($maxwidth)) {
             $maxwidth = 480;
@@ -47,7 +48,7 @@ class local {
 
         $pathcomps = self::explode_img_path($filepath);
         self::url_decode_path_components($pathcomps);
-        if (count($pathcomps) > 5) {
+        if (count($pathcomps) > 5 && $asfilepath) {
             $component = $pathcomps[1];
 
             // See if we have component support for this component.
@@ -128,6 +129,17 @@ class local {
     }
 
     /**
+     * URL decode file path.
+     * @param string $pluginfilepath
+     * @return string
+     */
+    public static function url_decode_path($pluginfilepath) {
+        $tmparr = self::explode_img_path($pluginfilepath);
+        self::url_decode_path($tmparr);
+        return implode('/', $tmparr);
+    }
+
+    /**
      * Get's an image file from the plugin file path.
      *
      * @param str $pluginfilepath pluginfile.php/
@@ -163,5 +175,15 @@ class local {
         $file = $fs->get_file_by_hash(sha1($path));
 
         return $file;
+    }
+
+    public static function file_pluginfile($relativepath) {
+        $forcedownload = optional_param('forcedownload', 0, PARAM_BOOL);
+        $preview = optional_param('preview', null, PARAM_ALPHANUM);
+        // Offline means download the file from the repository and serve it, even if it was an external link.
+        // The repository may have to export the file to an offline format.
+        $offline = optional_param('offline', 0, PARAM_BOOL);
+        $embed = optional_param('embed', 0, PARAM_BOOL);
+        file_pluginfile($relativepath, $forcedownload, $preview, $offline, $embed);
     }
 }

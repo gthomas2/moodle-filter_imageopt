@@ -43,19 +43,17 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
     global $CFG;
 
     $originalsrc = base64_decode(clean_param($args[0], PARAM_ALPHANUMEXT)); // PARAM_BASE64 did not work for me.
-
     $imgpath = local::get_img_path_from_src($originalsrc);
     $originalfile = local::get_img_file($imgpath);
     $optimisedpath = local::get_optimised_path($imgpath);
-
-    $optimisedsrc = local::get_optimised_src($originalfile, $originalsrc, $optimisedpath);
+    $optimisedurlpath = local::get_optimised_path($imgpath, false);
 
     $fs = get_file_storage();
 
     $optimisedfile = local::get_img_file($optimisedpath);
 
     if ($optimisedfile) {
-        redirect($optimisedsrc);
+        local::file_pluginfile($optimisedurlpath);
         die;
     }
 
@@ -73,7 +71,8 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
 
     $imageinfo = (object) $originalfile->get_imageinfo();
     if ($imageinfo->width <= $maxwidth) {
-        redirect($originalsrc);
+        local::file_pluginfile(local::url_decode_path($imgpath));
+        die;
     }
 
     // Make sure resized file is fresh.
@@ -89,7 +88,7 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
 
         $imageoptpos = array_search('imageopt', $pathcomps, true);
         if ($imageoptpos === false) {
-            redirect($originalsrc);
+            local::file_pluginfile(local::url_decode_path($imgpath));
             die;
         }
 
@@ -102,10 +101,10 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
     }
 
     if (!$optimisedfile) {
-        redirect($originalsrc);
+        local::file_pluginfile(local::url_decode_path($imgpath));
         die;
     } else {
-        redirect($optimisedurl);
+        local::file_pluginfile($optimisedurlpath);
         die;
     }
 }
