@@ -73,6 +73,8 @@ class image {
         $jpgquality = 90
     ) {
 
+        raise_memory_limit(MEMORY_EXTRA);
+
         if (substr($resizefilepath, -1) !== '/') {
             $resizefilepath .= '/';
         }
