@@ -17,6 +17,8 @@ namespace filter_imageopt\componentsupport;
 
 defined('MOODLE_INTERNAL') || die;
 
+// We need to ignore all the unused vars in all functions in this class because they are stubs.
+// @codingStandardsIgnoreStart
 abstract class base_component {
    /**
     * Get the image file for the specified file path components.
@@ -47,5 +49,6 @@ abstract class base_component {
         return null;
     }
 }
+// @codingStandardsIgnoreEnd
 
 
