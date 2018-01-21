@@ -54,7 +54,7 @@ class question extends base_component {
         } else {
             return null;
         }
-        $pathcomponents[count($pathcomponents)-1] = 'imageopt/'.$maxwidth.'/'.$pathcomponents[count($pathcomponents)-1];
+        $pathcomponents[count($pathcomponents) - 1] = 'imageopt/'.$maxwidth.'/'.$pathcomponents[count($pathcomponents) - 1];
         $optimisedpath = implode('/', $pathcomponents);
         if (substr($optimisedpath, 0, 1) !== '/') {
             $optimisedpath = '/'.$optimisedpath;
@@ -73,7 +73,7 @@ class question extends base_component {
         array_splice($urlpathcomponents, 6, 0, ['imageopt', $maxwidth]);
 
         $opturl = new \moodle_url($CFG->wwwroot.'/pluginfile.php/'.implode('/', $urlpathcomponents));
-        
+
         return $opturl;
     }
 }

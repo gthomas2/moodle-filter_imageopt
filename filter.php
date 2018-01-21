@@ -204,7 +204,8 @@ EOF;
      * @param bool $optimisedavailable
      * @return string
      */
-    private function apply_loadonvisible(array $match, stored_file $file, $originalsrc, $optimisedsrc, $optimisedavailable = false) {
+    private function apply_loadonvisible(array $match, stored_file $file, $originalsrc, $optimisedsrc,
+                                         $optimisedavailable = false) {
         global $PAGE;
 
         static $jsloaded = false;
@@ -253,7 +254,8 @@ EOF;
 
         $optimisedavailable = $optimisedavailable ? 1 : 0;
 
-        $img = str_ireplace('<img ', '<img data-loadonvisible="'.$loadonvisible.'" data-optimised="'.$optimisedavailable.'" ', $img);
+        $img = str_ireplace('<img ',
+                '<img data-loadonvisible="'.$loadonvisible.'" data-optimised="'.$optimisedavailable.'" ', $img);
         $img = str_ireplace($match[1], 'src="data:image/svg+xml;utf8,'.s($this->empty_image($width, $height)).'"', $img);
 
         return ($img);

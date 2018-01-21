@@ -61,7 +61,7 @@ class local {
             }
         }
 
-        $pathcomps[count($pathcomps)-1] = 'imageopt/'.$maxwidth.'/'.$pathcomps[count($pathcomps)-1];
+        $pathcomps[count($pathcomps) - 1] = 'imageopt/'.$maxwidth.'/'.$pathcomps[count($pathcomps) - 1];
         $optimisedpath = implode('/', $pathcomps);
         if (substr($optimisedpath, 0, 1) !== '/') {
             $optimisedpath = '/'.$optimisedpath;
