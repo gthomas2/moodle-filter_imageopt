@@ -42,11 +42,11 @@ defined('MOODLE_INTERNAL') || die();
 function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
     global $CFG;
 
-    $originalsrc = base64_decode(clean_param($args[0], PARAM_ALPHANUMEXT)); // PARAM_BASE64 did not work for me.
-    $imgpath = local::get_img_path_from_src($originalsrc);
-    $originalfile = local::get_img_file($imgpath);
-    $optimisedpath = local::get_optimised_path($imgpath);
-    $optimisedurlpath = local::get_optimised_path($imgpath, false);
+    $urlpathid = clean_param($args[0], PARAM_INT);
+    $originalimgpath = local::get_url_path_by_id($urlpathid);
+    $originalfile = local::get_img_file($originalimgpath);
+    $optimisedpath = local::get_optimised_path($originalimgpath);
+    $optimisedurlpath = local::get_optimised_path($originalimgpath, false);
 
     $fs = get_file_storage();
 
@@ -71,7 +71,7 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
 
     $imageinfo = (object) $originalfile->get_imageinfo();
     if ($imageinfo->width <= $maxwidth) {
-        local::file_pluginfile(local::url_decode_path($imgpath));
+        local::file_pluginfile(local::url_decode_path($originalimgpath));
         die;
     }
 
@@ -88,7 +88,7 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
 
         $imageoptpos = array_search('imageopt', $pathcomps, true);
         if ($imageoptpos === false) {
-            local::file_pluginfile(local::url_decode_path($imgpath));
+            local::file_pluginfile(local::url_decode_path($originalimgpath));
             die;
         }
 
@@ -98,13 +98,15 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
         $optimiseddirpath = '/'.implode('/', array_slice($pathcomps, $imageoptpos, $length)).'/';
 
         $optimisedfile = image::resize($originalfile, $optimiseddirpath, $filename, $maxwidth);
+
     }
 
     if (!$optimisedfile) {
-        local::file_pluginfile(local::url_decode_path($imgpath));
-        die;
-    } else {
-        local::file_pluginfile($optimisedurlpath);
+        local::file_pluginfile(local::url_decode_path($originalimgpath));
         die;
     }
+
+    local::delete_queue_item_by_path($originalimgpath); // Delete the queue record.
+    local::file_pluginfile($optimisedurlpath);
+    die;
 }

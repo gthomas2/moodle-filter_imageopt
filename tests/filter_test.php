@@ -96,7 +96,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
      * @throws dml_exception
      */
     public function test_image_opt_url() {
-        global $CFG;
+        global $CFG, $DB;
 
         $this->resetAfterTest();
         $this->setAdminUser();
@@ -113,9 +113,11 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         $url = phpunit_util::call_internal_method($filter, 'image_opt_url', [$file, $originalurl], get_class($filter));
 
+        $row = $DB->get_record('filter_imageopt', ['urlpath' => 'pluginfile.php/somefile.jpg']);
+        $urlpathid = $row->id;
+
         $expected = new moodle_url(
-            $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/filter_imageopt/480'.'/'.base64_encode($originalurl).
-            '/'.$file->get_filename());
+            $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/filter_imageopt/480'.'/'.$urlpathid.'/'.$file->get_filename());
         $this->assertEquals($expected, $url);
     }
 
@@ -265,10 +267,10 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
                 get_class($filter));
 
         $loadonvisibleurl = $CFG->wwwroot.'/pluginfile.php/'.$file->get_contextid().'/filter_imageopt/'.
-                $maxwidth.'/~base64url~/'.$fixturefile;
+                $maxwidth.'/~pathid~/'.$fixturefile;
 
         // Test filter plugin img, lazy load.
-        $regex = '/img data-loadonvisible="'.str_replace('~base64url~', '(?:[A-z|0-9|=]*)', preg_quote($loadonvisibleurl, '/')).'/';
+        $regex = '/img data-loadonvisible="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($loadonvisibleurl, '/')).'/';
         $this->assertRegExp($regex, $str);
         $this->assertContains('src="data:image/svg+xml;utf8,', $str);
 
@@ -284,7 +286,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         global $CFG;
 
         $url = $CFG->wwwroot.'/pluginfile.php/'.$file->get_contextid().'/filter_imageopt/'.$maxwidth.
-                '/~base64url~/'.$file->get_filename();
+                '/~pathid~/'.$file->get_filename();
 
         return $url;
     }
@@ -317,7 +319,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
                 get_class($filter));
 
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
-        $regex = '/'.str_replace('~base64url~', '(?:[A-z|0-9|=]*)', preg_quote($postfilterurl, '/')).'/';
+        $regex = '/'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($postfilterurl, '/')).'/';
         $this->assertRegExp($regex, $processed);
 
     }
@@ -349,7 +351,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';
         $this->assertContains($prefilterurl, $labeltxt);
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
-        $regex = '/src="'.str_replace('~base64url~', '(?:[A-z|0-9|=]*)', preg_quote($postfilterurl, '/')).'/';
+        $regex = '/src="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($postfilterurl, '/')).'/';
         $this->assertRegExp($regex, $filtered);
 
         // We need a space before src so it doesn't trigger on original-src.
@@ -365,7 +367,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $this->assertContains($prefilterurl, $labeltxt);
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
 
-        $regex = '/data-loadonvisible="'.str_replace('~base64url~', '(?:[A-z|0-9|=]*)', preg_quote($postfilterurl, '/')).'/';
+        $regex = '/data-loadonvisible="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($postfilterurl, '/')).'/';
         $this->assertRegExp($regex, $filtered);
 
         $this->assertNotContains('data-loadonvisible="'.$prefilterurl, $filtered);

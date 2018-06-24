@@ -91,6 +91,51 @@ class local {
     }
 
     /**
+     * Add url path to queue
+     * @param string $path
+     * @return bool|int
+     * @throws \dml_exception
+     */
+    public static function add_url_path_to_queue($path) {
+        global $DB;
+
+        $existing = $DB->get_record('filter_imageopt', ['urlpath' => $path]);
+        if ($existing) {
+            return $existing->id;
+        }
+
+        $data = (object) [
+            'urlpath' => $path,
+            'timecreated' => time()
+        ];
+
+        return $DB->insert_record('filter_imageopt', $data);
+    }
+
+    /**
+     * Get url path by id
+     * @param int $id
+     * @return mixed
+     * @throws \dml_exception
+     */
+    public static function get_url_path_by_id($id) {
+        global $DB;
+
+        return $DB->get_field('filter_imageopt', 'urlpath', ['id' => $id]);
+    }
+
+    /**
+     * Delete queue item by url path.
+     * @param $urlpath
+     * @throws \dml_exception
+     */
+    public static function delete_queue_item_by_path($urlpath) {
+        global $DB;
+
+        $DB->delete_records('filter_imageopt', ['urlpath' => $urlpath]);
+    }
+
+    /**
      * Gets an img path from image src attribute.
      * @param type string $src
      * @return array
