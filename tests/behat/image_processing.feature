@@ -45,7 +45,7 @@ Feature: When the image optimiser filter is enabled, images are placeheld until 
     And the image "testpng_400x250.png" has not been optimised
     And I directly open the image "testpng_2880x1800.png" in the test label in course "C1"
     # If the image was opened successfully then there should not be a html element on the page.
-    And I wait until "#page-wrapper" "css_element" does not exist
+    And I wait until "#page-content" "css_element" does not exist
     And I am on site homepage
     And I log out
     And I log in as "student1"
@@ -53,11 +53,11 @@ Feature: When the image optimiser filter is enabled, images are placeheld until 
     # The page is reloaded to nuke image cache.
     And I reload the page
     # If the image could not be opened due to access rights, we should have a html element on a page with appropriate options.
-    And I wait until "#page-wrapper" "css_element" exists
+    And I wait until "#page-content" "css_element" exists
     And I should see "You can not enrol yourself in this course"
     And I log out
-    And I directly open the image "testpng_2880x1800.png" in the test label in course "C1"    
+    And I directly open the image "testpng_2880x1800.png" in the test label in course "C1"
     # The page is reloaded to nuke image cache.
     And I reload the page
-    And I wait until "#page-wrapper" "css_element" exists
+    And I wait until "#page-content" "css_element" exists
     And I should see "Some courses may allow guest access" in the "#page-login-index" "css_element"

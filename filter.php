@@ -137,8 +137,11 @@ EOF;
         $filename = $file->get_filename();
         $contextid = $file->get_contextid();
 
+        $originalpath = local::get_img_path_from_src($originalsrc);
+        $urlpathid = local::add_url_path_to_queue($originalpath);
+
         $url = $CFG->wwwroot.'/pluginfile.php/'.$contextid.'/filter_imageopt/'.$maxwidth.'/'.
-                base64_encode($originalsrc).'/'.$filename;
+                $urlpathid.'/'.$filename;
 
         return new moodle_url($url);
     }
