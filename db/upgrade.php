@@ -54,4 +54,5 @@ function xmldb_filter_imageopt_upgrade($oldversion) {
         // Imageopt savepoint reached.
         upgrade_plugin_savepoint(true, 2018061803, 'filter', 'imageopt');
     }
+    return true;
 }
