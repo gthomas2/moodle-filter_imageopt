@@ -32,3 +32,4 @@ $string['widthattribute'] = 'Image width attribute';
 $string['widthattributedesc'] = 'How should existing image width attributes be dealt with';
 $string['widthattpreserve'] = 'Preserve user width attributes in all cases';
 $string['widthattpreserveltmax'] = 'Preserve user width attributes only if less than maximum width';
+$string['privacy:metadata'] = 'The image optimiser filter creates optimised versions of pre-existing images. It does not store any information other than that relating to pre-existing images.';
