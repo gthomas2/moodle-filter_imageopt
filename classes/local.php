@@ -28,8 +28,8 @@ defined('MOODLE_INTERNAL') || die();
 
 use stored_file;
 
-class local {
-
+class local
+{
     const REGEXP_IMGSRC = '/<img\s[^\>]*(src=["|\']((?:.*)(pluginfile.php(?:.*)))["|\'])(?:.*)>/isU';
 
     const REGEXP_SRC = '/(?:.*)(pluginfile.php(?:.*))/';
@@ -40,19 +40,19 @@ class local {
      * @param bool $asfilepath - if true will return the path for use with the file storage system, not urls.
      * @return string
      */
-    public static function get_optimised_path($filepath, $asfilepath = true) {
+    public static function get_optimised_path($filepath, $asfilepath = true)
+    {
         $maxwidth = get_config('filter_imageopt', 'maxwidth');
         if (empty($maxwidth)) {
             $maxwidth = 480;
         }
-
         $pathcomps = self::explode_img_path($filepath);
         self::url_decode_path_components($pathcomps);
+        // what is the significance of pathcomps being larger than 5?
         if (count($pathcomps) > 5 && $asfilepath) {
             $component = $pathcomps[1];
-
             // See if we have component support for this component.
-            $classname = '\\filter_imageopt\\componentsupport\\'.$component;
+            $classname = '\\filter_imageopt\\componentsupport\\' . $component;
             if (class_exists($classname) && method_exists($classname, 'get_optimised_path')) {
                 $optimisedpath = $classname::get_optimised_path($pathcomps, $maxwidth);
                 if ($optimisedpath !== null) {
@@ -61,10 +61,10 @@ class local {
             }
         }
 
-        $pathcomps[count($pathcomps) - 1] = 'imageopt/'.$maxwidth.'/'.$pathcomps[count($pathcomps) - 1];
-        $optimisedpath = implode('/', $pathcomps);
+        $pathcomps[count($pathcomps) - 1] = 'imageopt/' . $maxwidth . '/' . $pathcomps[count($pathcomps) - 1];
+        $optimisedpath                    = implode('/', $pathcomps);
         if (substr($optimisedpath, 0, 1) !== '/') {
-            $optimisedpath = '/'.$optimisedpath;
+            $optimisedpath = '/' . $optimisedpath;
         }
         return $optimisedpath;
     }
@@ -76,15 +76,16 @@ class local {
      * @param string $optimisedpath
      * @return string
      */
-    public static function get_optimised_src(\stored_file $file, $originalsrc, $optimisedpath) {
+    public static function get_optimised_src(\stored_file $file, $originalsrc, $optimisedpath)
+    {
         global $CFG;
-        $classname = '\\filter_imageopt\\componentsupport\\'.$file->get_component();
+        $classname    = '\\filter_imageopt\\componentsupport\\' . $file->get_component();
         $optimisedsrc = null;
         if (class_exists($classname) && method_exists($classname, 'get_optimised_src')) {
             $optimisedsrc = $classname::get_optimised_src($file, $originalsrc);
         }
         if (empty($optimisedsrc)) {
-            $optimisedsrc = new \moodle_url($CFG->wwwroot.'/pluginfile.php'.$optimisedpath);
+            $optimisedsrc = new \moodle_url($CFG->wwwroot . '/pluginfile.php' . $optimisedpath);
         }
         $optimisedsrc = $optimisedsrc->out();
         return $optimisedsrc;
@@ -96,7 +97,8 @@ class local {
      * @return bool|int
      * @throws \dml_exception
      */
-    public static function add_url_path_to_queue($path) {
+    public static function add_url_path_to_queue($path)
+    {
         global $DB;
 
         $existing = $DB->get_record('filter_imageopt', ['urlpath' => $path]);
@@ -105,8 +107,8 @@ class local {
         }
 
         $data = (object) [
-            'urlpath' => $path,
-            'timecreated' => time()
+            'urlpath'     => $path,
+            'timecreated' => time(),
         ];
 
         return $DB->insert_record('filter_imageopt', $data);
@@ -118,7 +120,8 @@ class local {
      * @return mixed
      * @throws \dml_exception
      */
-    public static function get_url_path_by_id($id) {
+    public static function get_url_path_by_id($id)
+    {
         global $DB;
 
         return $DB->get_field('filter_imageopt', 'urlpath', ['id' => $id]);
@@ -129,7 +132,8 @@ class local {
      * @param $urlpath
      * @throws \dml_exception
      */
-    public static function delete_queue_item_by_path($urlpath) {
+    public static function delete_queue_item_by_path($urlpath)
+    {
         global $DB;
 
         $DB->delete_records('filter_imageopt', ['urlpath' => $urlpath]);
@@ -140,7 +144,8 @@ class local {
      * @param type string $src
      * @return array
      */
-    public static function get_img_path_from_src($src) {
+    public static function get_img_path_from_src($src)
+    {
         $matches = [];
 
         preg_match(self::REGEXP_SRC, $src, $matches);
@@ -153,7 +158,8 @@ class local {
      * @param string $pluginfilepath
      * @return array
      */
-    public static function explode_img_path($pluginfilepath) {
+    public static function explode_img_path($pluginfilepath)
+    {
         $tmparr = explode('/', $pluginfilepath);
         if ($tmparr[0] === 'pluginfile.php') {
             array_splice($tmparr, 0, 1);
@@ -167,8 +173,9 @@ class local {
      * URL decode each component of a path.
      * @param array $pathcomponents
      */
-    public static function url_decode_path_components(array &$pathcomponents) {
-        array_walk($pathcomponents, function(&$item, $key) {
+    public static function url_decode_path_components(array &$pathcomponents)
+    {
+        array_walk($pathcomponents, function (&$item, $key) {
             $item = urldecode($item);
         });
     }
@@ -178,7 +185,8 @@ class local {
      * @param string $pluginfilepath
      * @return string
      */
-    public static function url_decode_path($pluginfilepath) {
+    public static function url_decode_path($pluginfilepath)
+    {
         $tmparr = self::explode_img_path($pluginfilepath);
         self::url_decode_path($tmparr);
         return implode('/', $tmparr);
@@ -190,18 +198,17 @@ class local {
      * @param str $pluginfilepath pluginfile.php/
      * @return \stored_file
      */
-    public static function get_img_file($pluginfilepath) {
-
+    public static function get_img_file($pluginfilepath)
+    {
         $fs = get_file_storage();
 
         $pathcomps = self::explode_img_path($pluginfilepath);
         self::url_decode_path_components($pathcomps);
-
+        // why is this > 5?
         if (count($pathcomps) > 5) {
             $component = $pathcomps[1];
-
             // See if we have component support for this component.
-            $classname = '\\filter_imageopt\\componentsupport\\'.$component;
+            $classname = '\\filter_imageopt\\componentsupport\\' . $component;
             if (class_exists($classname) && method_exists($classname, 'get_img_file')) {
                 $file = $classname::get_img_file($pathcomps);
                 if ($file instanceof stored_file) {
@@ -215,20 +222,28 @@ class local {
             array_splice($pathcomps, 3, 0, [0]);
         }
 
-        $path = '/'.implode('/', $pathcomps);
+        // if mod_page, force the item id to 0. Why? Who knows!
+        if ($pathcomps[1] == 'mod_page') {
+            $pathcomps[3] = 0;
+        }
+
+        $path = '/' . implode('/', $pathcomps);
+
+        // remove query string if there is one as that borks the hash, mod_page seems to add one for example
+        $path = preg_replace('/\?.*/', '', $path);
 
         $file = $fs->get_file_by_hash(sha1($path));
-
         return $file;
     }
 
-    public static function file_pluginfile($relativepath) {
+    public static function file_pluginfile($relativepath)
+    {
         $forcedownload = optional_param('forcedownload', 0, PARAM_BOOL);
-        $preview = optional_param('preview', null, PARAM_ALPHANUM);
+        $preview       = optional_param('preview', null, PARAM_ALPHANUM);
         // Offline means download the file from the repository and serve it, even if it was an external link.
         // The repository may have to export the file to an offline format.
         $offline = optional_param('offline', 0, PARAM_BOOL);
-        $embed = optional_param('embed', 0, PARAM_BOOL);
+        $embed   = optional_param('embed', 0, PARAM_BOOL);
         file_pluginfile($relativepath, $forcedownload, $preview, $offline, $embed);
     }
 }
