@@ -222,7 +222,7 @@ class local {
 
         $path = '/'.implode('/', $pathcomps);
 
-        / remove query string if there is one as that borks the hash, mod_page seems to add one for example
+        // remove query string if there is one as that borks the hash, mod_page seems to add one for example
         $path = preg_replace('/\?.*/', '', $path);
 
         $file = $fs->get_file_by_hash(sha1($path));
