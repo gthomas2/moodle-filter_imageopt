@@ -48,7 +48,7 @@ class local {
 
         $pathcomps = self::explode_img_path($filepath);
         self::url_decode_path_components($pathcomps);
-        if (count($pathcomps) > 5 && $asfilepath) {
+        if ($asfilepath) {
             $component = $pathcomps[1];
 
             // See if we have component support for this component.
@@ -197,16 +197,14 @@ class local {
         $pathcomps = self::explode_img_path($pluginfilepath);
         self::url_decode_path_components($pathcomps);
 
-        if (count($pathcomps) > 5) {
-            $component = $pathcomps[1];
+        $component = $pathcomps[1];
 
-            // See if we have component support for this component.
-            $classname = '\\filter_imageopt\\componentsupport\\'.$component;
-            if (class_exists($classname) && method_exists($classname, 'get_img_file')) {
-                $file = $classname::get_img_file($pathcomps);
-                if ($file instanceof stored_file) {
-                    return $file;
-                }
+        // See if we have component support for this component.
+        $classname = '\\filter_imageopt\\componentsupport\\'.$component;
+        if (class_exists($classname) && method_exists($classname, 'get_img_file')) {
+            $file = $classname::get_img_file($pathcomps);
+            if ($file instanceof stored_file) {
+                return $file;
             }
         }
 

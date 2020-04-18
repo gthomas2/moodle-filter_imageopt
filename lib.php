@@ -98,7 +98,6 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
         $optimiseddirpath = '/'.implode('/', array_slice($pathcomps, $imageoptpos, $length)).'/';
 
         $optimisedfile = image::resize($originalfile, $optimiseddirpath, $filename, $maxwidth);
-
     }
 
     if (!$optimisedfile) {

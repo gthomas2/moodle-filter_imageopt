@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Image optimiser support for question component.
+ * Image optimiser support for page component.
  * @package filter_imageopt
- * @author    Guy Thomas <brudinie@gmail.com>
- * @copyright Copyright (c) 2018 Guy Thomas.
+ * @author    Guy Thomas <dev@citri.city>
+ * @copyright Copyright (c) 2020 Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 namespace filter_imageopt\componentsupport;
@@ -27,45 +27,44 @@ defined('MOODLE_INTERNAL') || die;
 
 use filter_imageopt\local;
 
-class question extends base_component {
+class mod_page extends base_component {
+
+    private static function check_component(array $pathcomponents) {
+        if ($pathcomponents[1] !== 'mod_page') {
+            throw new \coding_exception('Component is not a page ('.$pathcomponents[2].')');
+        }
+    }
 
     public static function get_img_file(array $pathcomponents) {
-        if (count($pathcomponents) <= 5) {
-            // Return null so that local lib uses default.
-            // Unless the number of path components is greater than 5
-            // then we don't need to do anything special for question files.
-            return null;
-        }
-        if ($pathcomponents[1] !== 'question') {
-            throw new \coding_exception('Component is not a question ('.$pathcomponents[2].')');
-        }
-        if (count($pathcomponents) === 7) {
-            array_splice($pathcomponents, 3, 2);
-        } else {
+        self::check_component($pathcomponents);
+
+        $filearea = $pathcomponents[2];
+        if ($filearea !== 'content') {
+            // We don't do any special processing for page mod unless the file area
+            // is content.
             return null;
         }
 
+        $pathcomponents[3] = 0;
         $path = '/'.implode('/', $pathcomponents);
-
         $fs = get_file_storage();
-        return $fs->get_file_by_hash(sha1($path));
+        $file = $fs->get_file_by_hash(sha1($path));
+
+        return $file;
     }
 
     public static function get_optimised_path(array $pathcomponents, $maxwidth) {
-        if (count($pathcomponents) <= 5) {
-            // Return null so that local lib uses default.
-            // Unless the number of path components is greater than 5
-            // then we don't need to do anything special for question files.
+        self::check_component($pathcomponents);
+
+        $filearea = $pathcomponents[2];
+        if ($filearea !== 'content') {
+            // We don't do any special processing for page mod unless the file area
+            // is content.
             return null;
         }
-        if ($pathcomponents[1] !== 'question') {
-            throw new \coding_exception('Component is not a question ('.$pathcomponents[2].')');
-        }
-        if (count($pathcomponents) === 7) {
-            array_splice($pathcomponents, 3, 2);
-        } else {
-            return null;
-        }
+
+        $pathcomponents[3] = 0;
+
         $pathcomponents[count($pathcomponents) - 1] = 'imageopt/'.$maxwidth.'/'.$pathcomponents[count($pathcomponents) - 1];
         $optimisedpath = implode('/', $pathcomponents);
         if (substr($optimisedpath, 0, 1) !== '/') {
@@ -82,7 +81,16 @@ class question extends base_component {
         $urlpath = local::get_img_path_from_src($originalsrc);
         $urlpathcomponents = local::explode_img_path($urlpath);
 
-        array_splice($urlpathcomponents, 6, 0, ['imageopt', $maxwidth]);
+        $filearea = $urlpathcomponents[2];
+        if ($filearea !== 'content') {
+            // We don't do any special processing for page mod unless the file area
+            // is content.
+            return null;
+        }
+
+        $urlpathcomponents[3] = 0;
+
+        array_splice($urlpathcomponents, 4, 0, ['imageopt', $maxwidth]);
 
         $opturl = new \moodle_url($CFG->wwwroot.'/pluginfile.php/'.implode('/', $urlpathcomponents));
 

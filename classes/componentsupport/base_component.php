@@ -17,17 +17,13 @@ namespace filter_imageopt\componentsupport;
 
 defined('MOODLE_INTERNAL') || die;
 
-// We need to ignore all the unused vars in all functions in this class because they are stubs.
-// @codingStandardsIgnoreStart
 abstract class base_component {
    /**
     * Get the image file for the specified file path components.
     * @param array $pathcomponents - path split by /.
     * @return \stored_file | null
     */
-    public static function get_img_file(array $pathcomponents) {
-        return null;
-    }
+    abstract static function get_img_file(array $pathcomponents);
 
     /**
      * Get the optimised path for specified file path.
@@ -35,9 +31,7 @@ abstract class base_component {
      * @param int $maxwidth
      * @return string | null;
      */
-    public static function get_optimised_path(array $pathcomponents, $maxwidth) {
-        return null;
-    }
+    abstract static function get_optimised_path(array $pathcomponents, $maxwidth);
 
     /**
      * Return the optimised url for the specfied file and original src.
@@ -45,10 +39,7 @@ abstract class base_component {
      * @param type $originalsrc
      * @return \moodle_url
      */
-    public static function get_optimised_src(\stored_file $file, $originalsrc) {
-        return null;
-    }
+    abstract public static function get_optimised_src(\stored_file $file, $originalsrc);
 }
-// @codingStandardsIgnoreEnd
 
 
