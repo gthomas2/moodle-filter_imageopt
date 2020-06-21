@@ -4,33 +4,45 @@ sudo: true
 
 addons:
   firefox: "47.0.1"
-  postgresql: "9.3"
+  postgresql: "9.5"
   apt:
     packages:
-      - oracle-java8-installer
-      - oracle-java8-set-default
 
 cache:
   directories:
     - $HOME/.composer/cache
     - $HOME/.npm
 
-php:
- - 7.0
- - 7.1
- - 7.2
+dist: trusty
 
-env:
- global:
-  - MOODLE_BRANCH=MOODLE_35_STABLE
- matrix:
-  - DB=pgsql
-  - DB=mysqli
+matrix:
+  include:
+    - php: 7.1
+      env: DB=mysqli MOODLE_BRANCH=MOODLE_35_STABLE NODEJS=14
+    - php: 7.1
+      env: DB=pgsql  MOODLE_BRANCH=MOODLE_35_STABLE NODEJS=14
+    - php: 7.1
+      env: DB=pgsql  MOODLE_BRANCH=MOODLE_36_STABLE
+    - php: 7.1
+      env: DB=pgsql  MOODLE_BRANCH=MOODLE_37_STABLE NODEJS=14
+    - php: 7.1
+      env: DB=pgsql  MOODLE_BRANCH=MOODLE_38_STABLE NODEJS=14
+    - php: 7.1
+      env: DB=mysqli MOODLE_BRANCH=MOODLE_39_STABLE NODEJS=14
+    - php: 7.2
+      env: DB=mysqli MOODLE_BRANCH=master NODEJS=14
+    - php: 7.2
+      env: DB=pgsql  MOODLE_BRANCH=master NODEJS=14
 
 before_install:
   - phpenv config-rm xdebug.ini
-  - nvm install 8.9
-  - nvm use 8.9
+  - if [ "$NODEJS" = 14 ]; then
+      nvm install 14.0.0;
+      nvm use 14.0.0;
+    else
+      nvm install 8.9;
+      nvm use 8.9;
+    fi
   - cd ../..
   - composer create-project -n --no-dev --prefer-dist moodlerooms/moodle-plugin-ci ci ^2
   - export PATH="$(cd ci/bin; pwd):$(cd ci/vendor/bin; pwd):$PATH"
