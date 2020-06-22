@@ -18,12 +18,13 @@ namespace filter_imageopt\componentsupport;
 defined('MOODLE_INTERNAL') || die;
 
 abstract class base_component {
-   /**
-    * Get the image file for the specified file path components.
-    * @param array $pathcomponents - path split by /.
-    * @return \stored_file | null
-    */
-    abstract static function get_img_file(array $pathcomponents);
+
+    /**
+     * Get the image file for the specified file path components.
+     * @param array $pathcomponents - path split by /.
+     * @return \stored_file | null
+     */
+    abstract public static function get_img_file(array $pathcomponents);
 
     /**
      * Get the optimised path for specified file path.
@@ -31,7 +32,7 @@ abstract class base_component {
      * @param int $maxwidth
      * @return string | null;
      */
-    abstract static function get_optimised_path(array $pathcomponents, $maxwidth);
+    abstract public static function get_optimised_path(array $pathcomponents, $maxwidth);
 
     /**
      * Return the optimised url for the specfied file and original src.
