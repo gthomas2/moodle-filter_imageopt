@@ -87,7 +87,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         ];
         foreach ($sizes as $size) {
             $emptyimage = phpunit_util::call_internal_method($filter, 'empty_image', $size, get_class($filter));
-            $this->assertContains('width="'.$size[0].'" height="'.$size[1].'"', $emptyimage);
+            $this->assertStringContainsString('width="'.$size[0].'" height="'.$size[1].'"', $emptyimage);
         }
     }
 
@@ -272,7 +272,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         // Test filter plugin img, lazy load.
         $regex = '/img data-loadonvisible="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($loadonvisibleurl, '/')).'/';
         $this->assertRegExp($regex, $str);
-        $this->assertContains('src="data:image/svg+xml;utf8,', $str);
+        $this->assertStringContainsString('src="data:image/svg+xml;utf8,', $str);
 
     }
 
@@ -349,29 +349,29 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $filter = new filter_imageopt($context, []);
         $filtered = $filter->filter($labeltxt);
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';
-        $this->assertContains($prefilterurl, $labeltxt);
+        $this->assertStringContainsString($prefilterurl, $labeltxt);
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
         $regex = '/src="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($postfilterurl, '/')).'/';
         $this->assertRegExp($regex, $filtered);
 
         // We need a space before src so it doesn't trigger on original-src.
-        $this->assertNotContains(' src="'.$prefilterurl, $filtered);
-        $this->assertNotContains('data-loadonvisible="'.$postfilterurl, $filtered);
-        $this->assertNotContains('data-loadonvisible="'.$prefilterurl, $filtered);
+        $this->assertStringNotContainsString(' src="'.$prefilterurl, $filtered);
+        $this->assertStringNotContainsString('data-loadonvisible="'.$postfilterurl, $filtered);
+        $this->assertStringNotContainsString('data-loadonvisible="'.$prefilterurl, $filtered);
 
         // Test filter plugin img,  lazy load.
         set_config('loadonvisible', '0', 'filter_imageopt');
         $filter = new filter_imageopt($context, []);
         $filtered = $filter->filter($labeltxt);
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';
-        $this->assertContains($prefilterurl, $labeltxt);
+        $this->assertStringContainsString($prefilterurl, $labeltxt);
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
 
         $regex = '/data-loadonvisible="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($postfilterurl, '/')).'/';
         $this->assertRegExp($regex, $filtered);
 
-        $this->assertNotContains('data-loadonvisible="'.$prefilterurl, $filtered);
-        $this->assertNotContains('src="'.$postfilterurl, $filtered);
-        $this->assertNotContains('src="'.$prefilterurl, $filtered);
+        $this->assertStringNotContainsString('data-loadonvisible="'.$prefilterurl, $filtered);
+        $this->assertStringNotContainsString('src="'.$postfilterurl, $filtered);
+        $this->assertStringNotContainsString('src="'.$prefilterurl, $filtered);
     }
 }
