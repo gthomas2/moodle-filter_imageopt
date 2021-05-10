@@ -1,56 +1,44 @@
 language: php
 
-sudo: true
-
 addons:
-  firefox: "47.0.1"
-  postgresql: "9.5"
-  apt:
-    packages:
+  postgresql: "9.6"
+
+services:
+  - mysql
+  - postgresql
+  - docker
 
 cache:
   directories:
     - $HOME/.composer/cache
     - $HOME/.npm
 
-dist: trusty
+php:
+ - 7.4
 
-matrix:
-  include:
-    - php: 7.1
-      env: DB=mysqli MOODLE_BRANCH=MOODLE_35_STABLE NODEJS=14
-    - php: 7.1
-      env: DB=pgsql  MOODLE_BRANCH=MOODLE_35_STABLE NODEJS=14
-    - php: 7.1
-      env: DB=pgsql  MOODLE_BRANCH=MOODLE_36_STABLE
-    - php: 7.1
-      env: DB=pgsql  MOODLE_BRANCH=MOODLE_37_STABLE NODEJS=14
-    - php: 7.1
-      env: DB=pgsql  MOODLE_BRANCH=MOODLE_38_STABLE NODEJS=14
-    - php: 7.2
-      env: DB=mysqli MOODLE_BRANCH=MOODLE_39_STABLE NODEJS=14
-    - php: 7.2
-      env: DB=mysqli MOODLE_BRANCH=master NODEJS=14
-    - php: 7.2
-      env: DB=pgsql  MOODLE_BRANCH=master NODEJS=14
+env:
+  global:
+    - IGNORE_PATHS=ignore
+    - IGNORE_NAMES=ignore_name.php
+    - MUSTACHE_IGNORE_NAMES=broken.mustache
+    - DB=pgsql
+    - MOODLE_BRANCH=master
 
 before_install:
   - phpenv config-rm xdebug.ini
-  - if [ "$NODEJS" = 14 ]; then
-      nvm install 14.0.0;
-      nvm use 14.0.0;
-    else
-      nvm install 8.9;
-      nvm use 8.9;
-    fi
-  - cd ../..
-  - composer create-project -n --no-dev --prefer-dist moodlerooms/moodle-plugin-ci ci ^2
-  - export PATH="$(cd ci/bin; pwd):$(cd ci/vendor/bin; pwd):$PATH"
+  - make init
+  # Mimic how a Moodle plugin would be run.
+  - cp -R tests/Fixture/moodle-local_ci ../moodle-local_ci
+  - export PATH="$(cd bin; pwd):$(cd vendor/bin; pwd):$PATH"
+  - export TRAVIS_BUILD_DIR=$(cd ../moodle-local_ci; pwd)
 
 install:
-  - moodle-plugin-ci install
+  - moodle-plugin-ci install -vvv
 
 script:
+  - make test-phpunit
+
+  # This is basically "integration" testing.
   - moodle-plugin-ci phplint
   - moodle-plugin-ci phpcpd
   - moodle-plugin-ci phpmd
@@ -58,5 +46,30 @@ script:
   - moodle-plugin-ci validate
   - moodle-plugin-ci savepoints
   - moodle-plugin-ci mustache
-  - moodle-plugin-ci phpunit
-  - moodle-plugin-ci behat
+  - moodle-plugin-ci grunt || [ \
+        "$MOODLE_BRANCH" != 'master' -a \
+        "$MOODLE_BRANCH" != 'MOODLE_310_STABLE' -a \
+        "$MOODLE_BRANCH" != 'MOODLE_39_STABLE' ]
+  - moodle-plugin-ci phpdoc
+  - moodle-plugin-ci phpunit --coverage-text
+  - moodle-plugin-ci behat --profile default
+  - moodle-plugin-ci behat --profile chrome
+
+jobs:
+  include:
+    - stage: Tests
+      php: 7.3
+      before_install: skip
+      install:
+        - make init
+      script:
+        - make validate
+    - stage: Integration tests
+    - php: 7.4
+      env: MOODLE_BRANCH=MOODLE_311_STABLE
+    - php: 7.4
+      env: MOODLE_BRANCH=MOODLE_310_STABLE
+    - php: 7.4
+      env: MOODLE_BRANCH=MOODLE_39_STABLE
+    - php: 7.4
+      env: MOODLE_BRANCH=MOODLE_38_STABLE
