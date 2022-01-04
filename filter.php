@@ -41,6 +41,11 @@ class filter_imageopt extends moodle_text_filter {
      */
     private $config;
 
+    /**
+     * Construct class
+     * @param context $context
+     * @param array $localconfig
+     */
     public function __construct(context $context, array $localconfig) {
         global $CFG;
 
@@ -58,6 +63,12 @@ class filter_imageopt extends moodle_text_filter {
         parent::__construct($context, $localconfig);
     }
 
+    /**
+     * Empty immage
+     * @param int $width
+     * @param int $height
+     * @return string
+     */
     private function empty_image($width, $height) {
         // @codingStandardsIgnoreStart
         $svg = <<<EOF
@@ -126,9 +137,9 @@ EOF;
 
     /**
      * Create image optimiser url - will take an original file and resize it then forward on.
-     * @param stored_file $file
+     * @param \stored_file $file
      * @param string $originalsrc
-     * @return moodle_url
+     * @return \moodle_url
      */
     public function image_opt_url(stored_file $file, $originalsrc) {
         global $CFG;
@@ -146,10 +157,13 @@ EOF;
         return new moodle_url($url);
     }
 
+    /**
+     * Process image tag.
+     * @param array $match
+     * @return string
+     */
     private function process_img_tag(array $match) {
         global $CFG;
-
-        $fs = get_file_storage();
 
         $maxwidth = $this->config->maxwidth;
 
@@ -244,7 +258,7 @@ EOF;
         if (!$imageinfo || !isset($imageinfo->width)) {
             return ($img);
         }
-        $width = $imageinfo->width;
+        $width = $imageinfo->width > $maxwidth ? $maxwidth : $imageinfo->width;
         $height = $imageinfo->height;
         $img = $this->img_add_width_height($img, $width, $height);
 

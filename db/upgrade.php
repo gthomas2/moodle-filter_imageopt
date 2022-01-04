@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Filter
  *
@@ -24,6 +22,14 @@ defined('MOODLE_INTERNAL') || die();
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Filter upgrade
+ *
+ * @param int $oldversion
+ * @return bool
+ */
 function xmldb_filter_imageopt_upgrade($oldversion) {
     global $DB;
 

@@ -27,14 +27,33 @@ defined('MOODLE_INTERNAL') || die;
 
 use filter_imageopt\local;
 
+/**
+ * Image optimiser support for page component.
+ * @package filter_imageopt
+ * @author    Guy Thomas <dev@citri.city>
+ * @copyright Copyright (c) 2020 Guy Thomas.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_page extends base_component {
 
+    /**
+     * Check component.
+     *
+     * @param array $pathcomponents
+     * @throws \coding_exception
+     */
     private static function check_component(array $pathcomponents) {
         if ($pathcomponents[1] !== 'mod_page') {
             throw new \coding_exception('Component is not a page ('.$pathcomponents[2].')');
         }
     }
 
+    /**
+     * Get's an image file.
+     *
+     * @param array $pathcomponents
+     * @return \stored_file
+     */
     public static function get_img_file(array $pathcomponents) {
         self::check_component($pathcomponents);
 
@@ -53,6 +72,13 @@ class mod_page extends base_component {
         return $file;
     }
 
+    /**
+     * Get's an image optimised path.
+     *
+     * @param array $pathcomponents
+     * @param int $maxwidth
+     * @return string
+     */
     public static function get_optimised_path(array $pathcomponents, $maxwidth) {
         self::check_component($pathcomponents);
 
@@ -73,6 +99,13 @@ class mod_page extends base_component {
         return $optimisedpath;
     }
 
+    /**
+     * Get's an image optimised source.
+     *
+     * @param \stored_file $file
+     * @param string $originalsrc
+     * @return \moodle_url
+     */
     public static function get_optimised_src(\stored_file $file, $originalsrc) {
         global $CFG;
 

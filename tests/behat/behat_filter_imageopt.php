@@ -16,6 +16,7 @@
 
 /**
  * Imageopt filter context
+ * @package   filter_imageopt
  * @author    Guy Thomas <brudinie@gmail.com>
  * @copyright Copyright (c) 2017 Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -28,12 +29,15 @@ use Behat\Mink\Exception\ExpectationException;
 
 /**
  * Imageopt filter context
+ * @package   filter_imageopt
  * @author    Guy Thomas <brudinie@gmail.com>
  * @copyright Copyright (c) 2017 Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class behat_filter_imageopt extends behat_base {
     /**
+     * If image optimiser is eneabled.
+     *
      * @Given /^the image optimiser filter is enabled$/
      */
     public function the_imageopt_filter_is_enabled() {
@@ -66,6 +70,8 @@ class behat_filter_imageopt extends behat_base {
     }
 
     /**
+     * The image has been optimised
+     *
      * @Given /^the image "(?P<imgfile_string>[^"]*)" has been optimised$/
      * @param string $imgfile
      */
@@ -74,6 +80,8 @@ class behat_filter_imageopt extends behat_base {
     }
 
     /**
+     * The image has not been optimised.
+     *
      * @Given /^the image "(?P<imgfile_string>[^"]*)" has not been optimised$/
      * @param string $imgfile
      */
@@ -82,17 +90,17 @@ class behat_filter_imageopt extends behat_base {
     }
 
     /**
+     * I directly open the image in the test label in course
+     *
      * @Given /^I directly open the image "(?P<imgfile_string>[^"]*)" in the test label in course "(?P<shortname_string>[^"]*)"$/
      * @param string $imgfile
      * @param string $courseshortname
      * @throws ExpectationException
      */
     public function open_label_image_directly($imgfile, $courseshortname) {
-        global $DB, $CFG;
+        global $DB;
 
         $course = $DB->get_record('course', ['shortname' => $courseshortname]);
-
-        $rs = $DB->get_records('label');
 
         $row = $DB->get_record('label', ['name' => 'test label', 'course' => $course->id]);
         $text = $row->intro;
