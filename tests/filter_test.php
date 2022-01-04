@@ -22,14 +22,17 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace filter_imageopt;
+
 defined('MOODLE_INTERNAL') || die();
 
 use filter_imageopt\local;
+use stored_file;
 
 global $CFG;
 
 require_once($CFG->dirroot . '/files/externallib.php');
-require_once(__DIR__.'/../filter.php');
+require_once($CFG->dirroot . '/filter/imageopt/filter.php');
 
 /**
  * Tests for filter class
@@ -38,7 +41,7 @@ require_once(__DIR__.'/../filter.php');
  * @copyright Guy Thomas 2017.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class filter_imageopt_filter_testcase extends advanced_testcase {
+class filter_test extends \advanced_testcase {
 
     /**
      * Test regex works with sample img tag + pluginfile.php src.
@@ -76,24 +79,24 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test empty svg image contains width and height params.
-     * @throws dml_exception
+     * @throws \dml_exception
      */
     public function test_empty_image() {
-        $filter = new filter_imageopt(context_system::instance(), []);
+        $filter = new \filter_imageopt(\context_system::instance(), []);
         $sizes = [
             [400, 300],
             [640, 480],
             [1024, 768]
         ];
         foreach ($sizes as $size) {
-            $emptyimage = phpunit_util::call_internal_method($filter, 'empty_image', $size, get_class($filter));
+            $emptyimage = \phpunit_util::call_internal_method($filter, 'empty_image', $size, get_class($filter));
             $this->assertStringContainsString('width="'.$size[0].'" height="'.$size[1].'"', $emptyimage);
         }
     }
 
     /**
      * Test image opt url is created as expected.
-     * @throws dml_exception
+     * @throws \dml_exception
      */
     public function test_image_opt_url() {
         global $CFG, $DB;
@@ -104,26 +107,26 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         set_config('maxwidth', '480', 'filter_imageopt');
 
         $fixturefile = 'testpng_2880x1800.png';
-        $context = context_system::instance();
+        $context = \context_system::instance();
 
         $file = $this->std_file_record($context, $fixturefile);
-        $filter = new filter_imageopt($context, []);
+        $filter = new \filter_imageopt($context, []);
 
         $originalurl = 'http://somesite/pluginfile.php/somefile.jpg';
 
-        $url = phpunit_util::call_internal_method($filter, 'image_opt_url', [$file, $originalurl], get_class($filter));
+        $url = \phpunit_util::call_internal_method($filter, 'image_opt_url', [$file, $originalurl], get_class($filter));
 
         $row = $DB->get_record('filter_imageopt', ['urlpath' => 'pluginfile.php/somefile.jpg']);
         $urlpathid = $row->id;
 
-        $expected = new moodle_url(
+        $expected = new \moodle_url(
             $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/filter_imageopt/480'.'/'.$urlpathid.'/'.$file->get_filename());
         $this->assertEquals($expected, $url);
     }
 
     /**
      * Test img_add_width_height function.
-     * @throws dml_exception
+     * @throws \dml_exception
      */
     public function test_img_add_width_height() {
         $this->resetAfterTest();
@@ -132,30 +135,30 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         set_config('maxwidth', $maxwidth, 'filter_imageopt');
         $newheight = (400 / 800) * $maxwidth;
 
-        $context = context_system::instance();
-        $filter = new filter_imageopt($context, []);
+        $context = \context_system::instance();
+        $filter = new \filter_imageopt($context, []);
 
         $img = '<img src="test" width="800" height="400" />';
-        $img = phpunit_util::call_internal_method($filter, 'img_add_width_height', [$img, 800, 400], get_class($filter));
+        $img = \phpunit_util::call_internal_method($filter, 'img_add_width_height', [$img, 800, 400], get_class($filter));
 
         $expected = '<img src="test" width="480" height="'.$newheight.'" />';
         $this->assertEquals($expected, $img);
 
         $img = '<img src="test" />';
         $expected = '<img width="480" height="'.$newheight.'" src="test" />';
-        $img = phpunit_util::call_internal_method($filter, 'img_add_width_height', [$img, 800, 400], get_class($filter));
+        $img = \phpunit_util::call_internal_method($filter, 'img_add_width_height', [$img, 800, 400], get_class($filter));
         $this->assertEquals($expected, $img);
     }
 
     /**
      * Create moodle file.
-     * @param context $context
+     * @param \context $context
      * @param string $fixturefile name of fixture file
      * @return stored_file
-     * @throws file_exception
-     * @throws stored_file_creation_exception
+     * @throws \file_exception
+     * @throws \stored_file_creation_exception
      */
-    private function std_file_record(context $context, $fixturefile) {
+    private function std_file_record(\context $context, $fixturefile) {
         global $CFG;
 
         $component = 'mod_label';
@@ -170,7 +173,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
             'filename' => $fixturefile
         ];
 
-        $fs = \get_file_storage();
+        $fs = get_file_storage();
         $file = $fs->create_file_from_pathname($filerecord, $CFG->dirroot.'/filter/imageopt/tests/fixtures/'.$fixturefile);
 
         return $file;
@@ -178,7 +181,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test getting image from file path.
-     * @throws coding_exception
+     * @throws \coding_exception
      */
     public function test_get_img_file() {
 
@@ -190,36 +193,34 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $fixturefile = 'testpng_2880x1800.png';
         $intro = '<p><img src="@@PLUGINFILE@@/'.$fixturefile.'" alt="" role="presentation"><br></p>';
         $label = $plugin->create_instance((object) ['course' => $course->id, 'intro' => $intro]);
-        $context = context_module::instance($label->cmid);
+        $context = \context_module::instance($label->cmid);
 
         $this->std_file_record($context, $fixturefile);
-
-        $filter = new filter_imageopt($context, []);
 
         $filepath = 'pluginfile.php/'.$context->id.'/mod_label/intro/'.$fixturefile;
 
         /** @var stored_file $imgfile */
-        $imgfile = phpunit_util::call_internal_method(null, 'get_img_file', [$filepath], 'filter_imageopt\local');
+        $imgfile = \phpunit_util::call_internal_method(null, 'get_img_file', [$filepath], 'filter_imageopt\local');
         $this->assertNotEmpty($imgfile);
         $this->assertEquals($fixturefile, $imgfile->get_filename());
     }
 
     /**
      * Return image file in label and return label text + regex matches.
+     * @param stored_file $fixturefile
      * @return [string, array, stored_file]
-     * @throws coding_exception
-     * @throws file_exception
+     * @throws \coding_exception
+     * @throws \file_exception
      * @throws stored_file_creation_exception
      */
     private function create_image_file_text($fixturefile) {
-
         $dg = $this->getDataGenerator();
         $course = $dg->create_course();
         $plugin = $dg->get_plugin_generator('mod_label');
 
         $intro = '<p><img src="@@PLUGINFILE@@/'.$fixturefile.'" alt="" role="presentation"><br></p>';
         $label = $plugin->create_instance((object) ['course' => $course->id, 'intro' => $intro]);
-        $context = context_module::instance($label->cmid);
+        $context = \context_module::instance($label->cmid);
 
         $file = $this->std_file_record($context, $fixturefile);
 
@@ -254,7 +255,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         /** @var stored_file $file */
         $file = $file;
 
-        $filter = new filter_imageopt(context_helper::instance_by_id($file->get_contextid()), []);
+        $filter = new \filter_imageopt(\context_helper::instance_by_id($file->get_contextid()), []);
 
         $regex = local::REGEXP_IMGSRC;
         preg_match($regex, $labeltxt, $matches);
@@ -263,7 +264,7 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         $optimisedsrc = $filter->image_opt_url($file, $originalsrc);
 
-        $str = phpunit_util::call_internal_method($filter, 'apply_loadonvisible', [$matches, $file, $originalsrc, $optimisedsrc],
+        $str = \phpunit_util::call_internal_method($filter, 'apply_loadonvisible', [$matches, $file, $originalsrc, $optimisedsrc],
                 get_class($filter));
 
         $loadonvisibleurl = $CFG->wwwroot.'/pluginfile.php/'.$file->get_contextid().'/filter_imageopt/'.
@@ -271,15 +272,16 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         // Test filter plugin img, lazy load.
         $regex = '/img data-loadonvisible="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($loadonvisibleurl, '/')).'/';
-        $this->assertRegExp($regex, $str);
+        $this->assertMatchesRegularExpression($regex, $str);
         $this->assertStringContainsString('src="data:image/svg+xml;utf8,', $str);
 
     }
 
     /**
      * Get the replacement imageopt filter image url for a stored_file.
+     *
      * @param stored_file $file
-     * @param int $maxwidth;
+     * @param int $maxwidth
      * @return string.
      */
     private function filter_imageopt_url_from_file(stored_file $file, $maxwidth) {
@@ -293,7 +295,8 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test processing image src.
-     * @throws coding_exception
+     *
+     * @throws \coding_exception
      */
     public function test_apply_img_tag() {
 
@@ -308,25 +311,25 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         list ($labeltxt, $matches, $file) = $this->create_image_file_text($fixturefile);
 
-        $context = context_helper::instance_by_id($file->get_contextid());
+        $context = \context_helper::instance_by_id($file->get_contextid());
 
-        $filter = new filter_imageopt($context, []);
+        $filter = new \filter_imageopt($context, []);
 
         $originalsrc = $matches[2];
         $optimisedsrc = $filter->image_opt_url($file, $originalsrc);
 
-        $processed = phpunit_util::call_internal_method($filter, 'apply_img_tag', [$matches, $file, $originalsrc, $optimisedsrc],
+        $processed = \phpunit_util::call_internal_method($filter, 'apply_img_tag', [$matches, $file, $originalsrc, $optimisedsrc],
                 get_class($filter));
 
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
         $regex = '/'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($postfilterurl, '/')).'/';
-        $this->assertRegExp($regex, $processed);
+        $this->assertMatchesRegularExpression($regex, $processed);
 
     }
 
     /**
      * Test main filter function.
-     * @throws coding_exception
+     * @throws \coding_exception
      */
     public function test_filter() {
         global $CFG;
@@ -342,17 +345,17 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         list ($labeltxt, $matches, $file) = $this->create_image_file_text($fixturefile);
 
-        $context = context_helper::instance_by_id($file->get_contextid());
+        $context = \context_helper::instance_by_id($file->get_contextid());
 
         // Test filter plugin img, no lazy load.
         set_config('loadonvisible', '999', 'filter_imageopt'); // 999 does not lazy load any images.
-        $filter = new filter_imageopt($context, []);
+        $filter = new \filter_imageopt($context, []);
         $filtered = $filter->filter($labeltxt);
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';
         $this->assertStringContainsString($prefilterurl, $labeltxt);
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
         $regex = '/src="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($postfilterurl, '/')).'/';
-        $this->assertRegExp($regex, $filtered);
+        $this->assertMatchesRegularExpression($regex, $filtered);
 
         // We need a space before src so it doesn't trigger on original-src.
         $this->assertStringNotContainsString(' src="'.$prefilterurl, $filtered);
@@ -361,14 +364,14 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         // Test filter plugin img,  lazy load.
         set_config('loadonvisible', '0', 'filter_imageopt');
-        $filter = new filter_imageopt($context, []);
+        $filter = new \filter_imageopt($context, []);
         $filtered = $filter->filter($labeltxt);
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';
         $this->assertStringContainsString($prefilterurl, $labeltxt);
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
 
         $regex = '/data-loadonvisible="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($postfilterurl, '/')).'/';
-        $this->assertRegExp($regex, $filtered);
+        $this->assertMatchesRegularExpression($regex, $filtered);
 
         $this->assertStringNotContainsString('data-loadonvisible="'.$prefilterurl, $filtered);
         $this->assertStringNotContainsString('src="'.$postfilterurl, $filtered);

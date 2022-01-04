@@ -28,10 +28,24 @@ defined('MOODLE_INTERNAL') || die();
 
 use stored_file;
 
+/**
+ * Local class for local people (we'll have no trouble here).
+ *
+ * @package   filter_imageopt
+ * @author    Guy Thomas <brudinie@gmail.com>
+ * @copyright Copyright (c) 2017 Guy Thomas.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class local {
 
+    /**
+     * Regex imgage source.
+     */
     const REGEXP_IMGSRC = '/<img\s[^\>]*(src=["|\']((?:.*)(pluginfile.php(?:.*)))["|\'])(?:.*)>/isU';
 
+    /**
+     * Regex source.
+     */
     const REGEXP_SRC = '/(?:.*)(pluginfile.php(?:.*))/';
 
     /**
@@ -126,7 +140,7 @@ class local {
 
     /**
      * Delete queue item by url path.
-     * @param $urlpath
+     * @param string $urlpath
      * @throws \dml_exception
      */
     public static function delete_queue_item_by_path($urlpath) {
@@ -137,7 +151,7 @@ class local {
 
     /**
      * Gets an img path from image src attribute.
-     * @param type string $src
+     * @param string $src
      * @return array
      */
     public static function get_img_path_from_src($src) {
@@ -187,7 +201,7 @@ class local {
     /**
      * Get's an image file from the plugin file path.
      *
-     * @param str $pluginfilepath pluginfile.php/
+     * @param string $pluginfilepath pluginfile.php/
      * @return \stored_file
      */
     public static function get_img_file($pluginfilepath) {
@@ -220,6 +234,11 @@ class local {
         return $file;
     }
 
+    /**
+     * Get file plugin.
+     *
+     * @param string $relativepath
+     */
     public static function file_pluginfile($relativepath) {
         $forcedownload = optional_param('forcedownload', 0, PARAM_BOOL);
         $preview = optional_param('preview', null, PARAM_ALPHANUM);

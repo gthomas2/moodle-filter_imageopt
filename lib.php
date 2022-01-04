@@ -40,15 +40,11 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool
  */
 function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
-    global $CFG;
-
     $urlpathid = clean_param($args[0], PARAM_INT);
     $originalimgpath = local::get_url_path_by_id($urlpathid);
     $originalfile = local::get_img_file($originalimgpath);
     $optimisedpath = local::get_optimised_path($originalimgpath);
     $optimisedurlpath = local::get_optimised_path($originalimgpath, false);
-
-    $fs = get_file_storage();
 
     $optimisedfile = local::get_img_file($optimisedpath);
 
@@ -61,11 +57,8 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
     $matches = [];
     preg_match($regex, $optimisedpath, $matches);
     $maxwidth = ($matches[1]);
-    $item = $originalfile->get_itemid();
-    $component = $originalfile->get_component();
     $filename = $originalfile->get_filename();
     $filearea = $originalfile->get_filearea();
-    $pathinfo = pathinfo($filename);
 
     $originalts = $originalfile->get_timemodified();
 

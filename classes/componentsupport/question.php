@@ -27,8 +27,21 @@ defined('MOODLE_INTERNAL') || die;
 
 use filter_imageopt\local;
 
+/**
+ * Image optimiser support for question component.
+ * @package filter_imageopt
+ * @author    Guy Thomas <brudinie@gmail.com>
+ * @copyright Copyright (c) 2018 Guy Thomas.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class question extends base_component {
 
+    /**
+     * Get's an image file.
+     *
+     * @param array $pathcomponents
+     * @return \stored_file
+     */
     public static function get_img_file(array $pathcomponents) {
         if (count($pathcomponents) <= 5) {
             // Return null so that local lib uses default.
@@ -51,6 +64,13 @@ class question extends base_component {
         return $fs->get_file_by_hash(sha1($path));
     }
 
+    /**
+     * Get's an image optimised path.
+     *
+     * @param array $pathcomponents
+     * @param int $maxwidth
+     * @return string
+     */
     public static function get_optimised_path(array $pathcomponents, $maxwidth) {
         if (count($pathcomponents) <= 5) {
             // Return null so that local lib uses default.
@@ -74,6 +94,13 @@ class question extends base_component {
         return $optimisedpath;
     }
 
+    /**
+     * Get's an image optimised source.
+     *
+     * @param \stored_file $file
+     * @param string $originalsrc
+     * @return \moodle_url
+     */
     public static function get_optimised_src(\stored_file $file, $originalsrc) {
         global $CFG;
 

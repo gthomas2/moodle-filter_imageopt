@@ -15,31 +15,36 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Privacy provider settings
- *
+ * Tests for filter class
  * @package   filter_imageopt
- * @copyright Copyright (c) 2018 Guy Thomas
+ * @author    Guy Thomas <brudinie@gmail.com>
+ * @copyright Guy Thomas 2017.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace filter_imageopt\privacy;
 
+defined('MOODLE_INTERNAL') || die();
+
+use \core_privacy\tests\provider_testcase;
+
 /**
- * Privacy provider settings
- *
+ * Tests for filter class
  * @package   filter_imageopt
- * @copyright Copyright (c) 2018 Guy Thomas
+ * @author    Guy Thomas <brudinie@gmail.com>
+ * @copyright Guy Thomas 2017.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements \core_privacy\local\metadata\null_provider {
+class privacy_test extends provider_testcase {
 
     /**
-     * Get the language string identifier with the component's language
-     * file to explain why this plugin stores no data.
-     *
-     * @return  string
+     * Test returning metadata.
+     * @coversDefaultClass filter_iplus\privacy\provider
      */
-    public static function get_reason() : string {
-        return 'privacy:metadata';
+    public function test_get_metadata() {
+        $privacy = new provider();
+        $reason = $privacy->get_reason();
+        $this->assertEquals($reason, 'privacy:metadata');
+        $this->assertStringContainsString('does not store', get_string($reason, 'filter_imageopt'));
     }
 }

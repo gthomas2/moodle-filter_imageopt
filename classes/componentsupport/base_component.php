@@ -13,10 +13,28 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Abstract class.
+ *
+ * @package   filter_imageopt
+ * @author    Guy Thomas <brudinie@gmail.com>
+ * @copyright Copyright (c) 2017 Guy Thomas.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace filter_imageopt\componentsupport;
 
 defined('MOODLE_INTERNAL') || die;
 
+/**
+ * Abstract class.
+ *
+ * @package   filter_imageopt
+ * @author    Guy Thomas <brudinie@gmail.com>
+ * @copyright Copyright (c) 2017 Guy Thomas.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 abstract class base_component {
 
     /**
@@ -36,11 +54,9 @@ abstract class base_component {
 
     /**
      * Return the optimised url for the specfied file and original src.
-     * @param \filter_imageopt\componentsupport\stored_file $file
-     * @param type $originalsrc
+     * @param \stored_file $file
+     * @param string $originalsrc
      * @return \moodle_url
      */
     abstract public static function get_optimised_src(\stored_file $file, $originalsrc);
 }
-
-
