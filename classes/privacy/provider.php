@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Privacy provider settings
+ * Privacy provider file.
  *
  * @package   filter_imageopt
  * @copyright Copyright (c) 2018 Guy Thomas
@@ -24,7 +24,13 @@
 
 namespace filter_imageopt\privacy;
 
-// This plugin does not store any personal user data.
+/**
+ * Privacy provider class.
+ *
+ * @package   filter_imageopt
+ * @copyright Copyright (c) 2018 Guy Thomas
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class provider implements \core_privacy\local\metadata\null_provider {
 
     /**

@@ -59,9 +59,10 @@ class image {
      *
      * @param stored_file $originalfile
      * @param string $resizefilepath
-     * @param bool | string $resizefilename
-     * @param int $newwidth;
-     * @param int $newheight;
+     * @param bool|string $resizefilename
+     * @param int $newwidth
+     * @param int $newheight
+     * @param int $jpgquality
      * @return stored_file
      */
     public static function resize (

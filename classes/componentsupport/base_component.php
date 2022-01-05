@@ -13,16 +13,34 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * File containing the base component class.
+ *
+ * @package   filter_imageopt
+ * @author    Guy Thomas <brudinie@gmail.com>
+ * @copyright Copyright (c) 2017 Guy Thomas.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace filter_imageopt\componentsupport;
 
 defined('MOODLE_INTERNAL') || die;
 
+/**
+ * The base component class.
+ *
+ * @package   filter_imageopt
+ * @author    Guy Thomas <brudinie@gmail.com>
+ * @copyright Copyright (c) 2017 Guy Thomas.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 abstract class base_component {
 
     /**
      * Get the image file for the specified file path components.
      * @param array $pathcomponents - path split by /.
-     * @return \stored_file | null
+     * @return \stored_file|null
      */
     abstract public static function get_img_file(array $pathcomponents);
 
@@ -30,17 +48,15 @@ abstract class base_component {
      * Get the optimised path for specified file path.
      * @param array $pathcomponents - path split by /.
      * @param int $maxwidth
-     * @return string | null;
+     * @return string|null
      */
     abstract public static function get_optimised_path(array $pathcomponents, $maxwidth);
 
     /**
      * Return the optimised url for the specfied file and original src.
-     * @param \filter_imageopt\componentsupport\stored_file $file
-     * @param type $originalsrc
+     * @param \stored_file $file
+     * @param string $originalsrc
      * @return \moodle_url
      */
     abstract public static function get_optimised_src(\stored_file $file, $originalsrc);
 }
-
-

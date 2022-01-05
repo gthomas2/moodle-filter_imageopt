@@ -41,6 +41,12 @@ class filter_imageopt extends moodle_text_filter {
      */
     private $config;
 
+    /**
+     * Constructor.
+     *
+     * @param context $context
+     * @param array $localconfig
+     */
     public function __construct(context $context, array $localconfig) {
         global $CFG;
 
@@ -58,6 +64,13 @@ class filter_imageopt extends moodle_text_filter {
         parent::__construct($context, $localconfig);
     }
 
+    /**
+     * Returns an empty image.
+     *
+     * @param int $width
+     * @param int $height
+     * @return string
+     */
     private function empty_image($width, $height) {
         // @codingStandardsIgnoreStart
         $svg = <<<EOF
@@ -146,6 +159,12 @@ EOF;
         return new moodle_url($url);
     }
 
+    /**
+     * Process an image tag.
+     *
+     * @param array $match
+     * @return string
+     */
     private function process_img_tag(array $match) {
         global $CFG;
 
