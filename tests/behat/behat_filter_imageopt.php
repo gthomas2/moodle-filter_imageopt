@@ -15,7 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Imageopt filter context
+ * Imageopt filter context.
+ *
+ * @package   filter_imageopt
  * @author    Guy Thomas <brudinie@gmail.com>
  * @copyright Copyright (c) 2017 Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,13 +29,18 @@ require_once(__DIR__ . '/../../../../lib/behat/behat_base.php');
 use Behat\Mink\Exception\ExpectationException;
 
 /**
- * Imageopt filter context
+ * Imageopt filter context.
+ *
+ * @package   filter_imageopt
  * @author    Guy Thomas <brudinie@gmail.com>
  * @copyright Copyright (c) 2017 Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class behat_filter_imageopt extends behat_base {
+
     /**
+     * The image optimiser filter is enabled step.
+     *
      * @Given /^the image optimiser filter is enabled$/
      */
     public function the_imageopt_filter_is_enabled() {
@@ -66,6 +73,8 @@ class behat_filter_imageopt extends behat_base {
     }
 
     /**
+     * Image optimised step.
+     *
      * @Given /^the image "(?P<imgfile_string>[^"]*)" has been optimised$/
      * @param string $imgfile
      */
@@ -74,6 +83,8 @@ class behat_filter_imageopt extends behat_base {
     }
 
     /**
+     * Image not optimised step.
+     *
      * @Given /^the image "(?P<imgfile_string>[^"]*)" has not been optimised$/
      * @param string $imgfile
      */
@@ -82,6 +93,8 @@ class behat_filter_imageopt extends behat_base {
     }
 
     /**
+     * Open label image directly.
+     *
      * @Given /^I directly open the image "(?P<imgfile_string>[^"]*)" in the test label in course "(?P<shortname_string>[^"]*)"$/
      * @param string $imgfile
      * @param string $courseshortname

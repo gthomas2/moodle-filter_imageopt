@@ -14,16 +14,22 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
- * Filter
+ * Filter upgrade file.
  *
  * @package   filter_imageopt
  * @copyright Copyright (c) 2018 Citricity Ltd
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Filter upgrade function.
+ *
+ * @param int $oldversion the version we are upgrading from
+ * @return bool always true
+ */
 function xmldb_filter_imageopt_upgrade($oldversion) {
     global $DB;
 

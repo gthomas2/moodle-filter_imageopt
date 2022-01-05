@@ -16,7 +16,8 @@
 
 /**
  * Image optimiser support for question component.
- * @package filter_imageopt
+ *
+ * @package   filter_imageopt
  * @author    Guy Thomas <brudinie@gmail.com>
  * @copyright Copyright (c) 2018 Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,8 +28,22 @@ defined('MOODLE_INTERNAL') || die;
 
 use filter_imageopt\local;
 
+/**
+ * Image optimiser support for question component.
+ *
+ * @package   filter_imageopt
+ * @author    Guy Thomas <brudinie@gmail.com>
+ * @copyright Copyright (c) 2018 Guy Thomas.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class question extends base_component {
 
+    /**
+     * Get the image file for the specified file path components.
+     *
+     * @param array $pathcomponents - path split by /.
+     * @return \stored_file|null
+     */
     public static function get_img_file(array $pathcomponents) {
         if (count($pathcomponents) <= 5) {
             // Return null so that local lib uses default.
@@ -51,6 +66,13 @@ class question extends base_component {
         return $fs->get_file_by_hash(sha1($path));
     }
 
+    /**
+     * Get the optimised path for specified file path.
+     *
+     * @param array $pathcomponents - path split by /.
+     * @param int $maxwidth
+     * @return string|null
+     */
     public static function get_optimised_path(array $pathcomponents, $maxwidth) {
         if (count($pathcomponents) <= 5) {
             // Return null so that local lib uses default.
@@ -74,6 +96,13 @@ class question extends base_component {
         return $optimisedpath;
     }
 
+    /**
+     * Return the optimised url for the specfied file and original src.
+     *
+     * @param \stored_file $file
+     * @param string $originalsrc
+     * @return \moodle_url
+     */
     public static function get_optimised_src(\stored_file $file, $originalsrc) {
         global $CFG;
 

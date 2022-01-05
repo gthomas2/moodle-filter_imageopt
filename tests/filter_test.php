@@ -206,10 +206,8 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Return image file in label and return label text + regex matches.
+     * @param string $fixturefile The name of the file.
      * @return [string, array, stored_file]
-     * @throws coding_exception
-     * @throws file_exception
-     * @throws stored_file_creation_exception
      */
     private function create_image_file_text($fixturefile) {
 
@@ -279,8 +277,8 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
     /**
      * Get the replacement imageopt filter image url for a stored_file.
      * @param stored_file $file
-     * @param int $maxwidth;
-     * @return string.
+     * @param int $maxwidth
+     * @return string
      */
     private function filter_imageopt_url_from_file(stored_file $file, $maxwidth) {
         global $CFG;
