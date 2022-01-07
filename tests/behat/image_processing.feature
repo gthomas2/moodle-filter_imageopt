@@ -54,7 +54,7 @@ Feature: When the image optimiser filter is enabled, images are placeheld until 
     And I reload the page
     # If the image could not be opened due to access rights, we should have a html element on a page with appropriate options.
     And I wait until "#page-content" "css_element" exists
-    And I should see "You can not enrol yourself in this course"
+    And I should see "You cannot enrol yourself in this course"
     And I log out
     And I directly open the image "testpng_2880x1800.png" in the test label in course "C1"
     # The page is reloaded to nuke image cache.
