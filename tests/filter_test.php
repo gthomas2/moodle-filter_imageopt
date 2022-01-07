@@ -22,9 +22,19 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace filter_imageopt;
+
 defined('MOODLE_INTERNAL') || die();
 
-use filter_imageopt\local;
+use context;
+use moodle_url;
+use stored_file;
+use phpunit_util;
+use context_helper;
+use context_module;
+use context_system;
+use filter_imageopt;
+use advanced_testcase;
 
 global $CFG;
 
@@ -38,7 +48,7 @@ require_once(__DIR__.'/../filter.php');
  * @copyright Guy Thomas 2017.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class filter_imageopt_filter_testcase extends advanced_testcase {
+class filter_test extends advanced_testcase {
 
     /**
      * Test regex works with sample img tag + pluginfile.php src.
@@ -76,7 +86,6 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test empty svg image contains width and height params.
-     * @throws dml_exception
      */
     public function test_empty_image() {
         $filter = new filter_imageopt(context_system::instance(), []);
@@ -93,7 +102,6 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test image opt url is created as expected.
-     * @throws dml_exception
      */
     public function test_image_opt_url() {
         global $CFG, $DB;
@@ -123,7 +131,6 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test img_add_width_height function.
-     * @throws dml_exception
      */
     public function test_img_add_width_height() {
         $this->resetAfterTest();
@@ -152,8 +159,6 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
      * @param context $context
      * @param string $fixturefile name of fixture file
      * @return stored_file
-     * @throws file_exception
-     * @throws stored_file_creation_exception
      */
     private function std_file_record(context $context, $fixturefile) {
         global $CFG;
@@ -178,10 +183,8 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test getting image from file path.
-     * @throws coding_exception
      */
     public function test_get_img_file() {
-
         $this->resetAfterTest();
         $this->setAdminUser();
         $dg = $this->getDataGenerator();
@@ -210,7 +213,6 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
      * @return [string, array, stored_file]
      */
     private function create_image_file_text($fixturefile) {
-
         $dg = $this->getDataGenerator();
         $course = $dg->create_course();
         $plugin = $dg->get_plugin_generator('mod_label');
@@ -232,7 +234,6 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test apply load on visible.
-     * @throws coding_exception
      */
     public function test_apply_loadonvisible() {
         global $CFG;
@@ -291,7 +292,6 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test processing image src.
-     * @throws coding_exception
      */
     public function test_apply_img_tag() {
 
@@ -324,7 +324,6 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test main filter function.
-     * @throws coding_exception
      */
     public function test_filter() {
         global $CFG;
