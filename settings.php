@@ -24,9 +24,9 @@
 defined('MOODLE_INTERNAL') || die;
 
 // You can never trust autoloading in settings.php!
-require_once(__DIR__.'/classes/image.php');
+require_once(__DIR__.'/classes/local.php');
 
-use filter_imageopt\image;
+use filter_imageopt\local;
 
 if ($ADMIN->fulltree) {
     $choices = [
@@ -49,10 +49,10 @@ if ($ADMIN->fulltree) {
         get_string('loadonvisibledesc', 'filter_imageopt'), 5, $choices));
 
     $choices = [
-        image::WIDTHATTPRSERVELTMAX => get_string('widthattpreserveltmax', 'filter_imageopt'),
-        image::WIDTHATTPRESERVE => get_string('widthattpreserve', 'filter_imageopt')
+        local::WIDTH_ATT_PRESERVE_MAX => get_string('widthattpreserveltmax', 'filter_imageopt'),
+        local::WIDTH_ATT_PRESERVE => get_string('widthattpreserve', 'filter_imageopt')
     ];
     $settings->add(new admin_setting_configselect('filter_imageopt/widthattribute',
         get_string('widthattribute', 'filter_imageopt'),
-        get_string('widthattributedesc', 'filter_imageopt'), image::WIDTHATTPRSERVELTMAX, $choices));
+        get_string('widthattributedesc', 'filter_imageopt'), local::WIDTH_ATT_PRESERVE_MAX, $choices));
 }

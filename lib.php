@@ -22,7 +22,6 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use filter_imageopt\image;
 use filter_imageopt\local;
 
 defined('MOODLE_INTERNAL') || die();
@@ -40,16 +39,11 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool
  */
 function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
-    global $CFG;
-
     $urlpathid = clean_param($args[0], PARAM_INT);
     $originalimgpath = local::get_url_path_by_id($urlpathid);
     $originalfile = local::get_img_file($originalimgpath);
     $optimisedpath = local::get_optimised_path($originalimgpath);
     $optimisedurlpath = local::get_optimised_path($originalimgpath, false);
-
-    $fs = get_file_storage();
-
     $optimisedfile = local::get_img_file($optimisedpath);
 
     if ($optimisedfile) {
@@ -61,11 +55,6 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
     $matches = [];
     preg_match($regex, $optimisedpath, $matches);
     $maxwidth = ($matches[1]);
-    $item = $originalfile->get_itemid();
-    $component = $originalfile->get_component();
-    $filename = $originalfile->get_filename();
-    $filearea = $originalfile->get_filearea();
-    $pathinfo = pathinfo($filename);
 
     $originalts = $originalfile->get_timemodified();
 
@@ -92,12 +81,21 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
             die;
         }
 
-        $filepos = array_search($filename, $pathcomps, true);
+        $filepos = array_search($originalfile->get_filename(), $pathcomps, true);
         $length = $filepos - $imageoptpos;
 
         $optimiseddirpath = '/'.implode('/', array_slice($pathcomps, $imageoptpos, $length)).'/';
 
-        $optimisedfile = image::resize($originalfile, $optimiseddirpath, $filename, $maxwidth);
+        $filerecord = [
+            'contextid' => $originalfile->get_contextid(),
+            'component' => $originalfile->get_component(),
+            'filearea' => $originalfile->get_filearea(),
+            'itemid' => $originalfile->get_itemid(),
+            'filepath' => $optimiseddirpath
+        ];
+
+        $fs = new file_storage();
+        $optimisedfile = $fs->convert_image($filerecord, $originalfile, $maxwidth);
     }
 
     if (!$optimisedfile) {
