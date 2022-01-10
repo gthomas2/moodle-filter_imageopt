@@ -200,7 +200,7 @@ class local {
     /**
      * Get's an image file from the plugin file path.
      *
-     * @param str $pluginfilepath pluginfile.php/
+     * @param string $pluginfilepath pluginfile.php/
      * @return \stored_file
      */
     public static function get_img_file($pluginfilepath) {
