@@ -24,7 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-use filter_imageopt\image;
 use filter_imageopt\local;
 
 /**
@@ -54,7 +53,7 @@ class filter_imageopt extends moodle_text_filter {
 
         $this->config = get_config('filter_imageopt');
         if (!isset($this->config->widthattribute)) {
-            $this->config->widthattribute = image::WIDTHATTPRSERVELTMAX;
+            $this->config->widthattribute = local::WIDTH_ATT_PRESERVE_MAX;
         }
         $this->config->widthattribute = intval($this->config->widthattribute);
         if (!isset($this->config->maxwidth)) {
@@ -98,7 +97,7 @@ EOF;
         $maxwidth = $this->config->maxwidth;
 
         if (stripos($img, ' width') !== false) {
-            if ($this->config->widthattribute === image::WIDTHATTPRSERVELTMAX) {
+            if ($this->config->widthattribute === local::WIDTH_ATT_PRESERVE_MAX) {
                 // Note - we cannot check for percentage widths as they are responsively variable.
                 $regex = '/(?<=\<img)(?:.*)width(?:\s|)=(?:"|\')(\d*)(?:px|)(?:"|\')/';
                 $matches = [];

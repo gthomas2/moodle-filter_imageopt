@@ -39,6 +39,16 @@ use stored_file;
 class local {
 
     /**
+     * Always preserve a width attribute already in an image tag.
+     */
+    const WIDTH_ATT_PRESERVE = 0;
+
+    /**
+     * Only preserve a width attribute if it's less than the maximum width.
+     */
+    const WIDTH_ATT_PRESERVE_MAX = 1;
+
+    /**
      * @var string REGEXP_IMGSRC The regular expression used to see if it is an image.
      */
     const REGEXP_IMGSRC = '/<img\s[^\>]*(src=["|\']((?:.*)(pluginfile.php(?:.*)))["|\'])(?:.*)>/isU';
