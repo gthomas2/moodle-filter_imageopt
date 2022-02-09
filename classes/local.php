@@ -51,7 +51,7 @@ class local {
     /**
      * @var string REGEXP_IMGSRC The regular expression used to see if it is an image.
      */
-    const REGEXP_IMGSRC = '/<img\s[^\>]*(src=["|\']((?:.*)(pluginfile.php(?:.*)))["|\'])(?:.*)>/isU';
+    const REGEXP_IMGSRC = '/<img\s[^\>]*(src=["|\']((?:.*)(pluginfile\.php(?:.*)))["|\'|?])(?:.*)>/isU';
 
     /**
      * @var string REGEXP_SRC The regular expression used to see if pluginfile.php is in the source.
