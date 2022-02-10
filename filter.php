@@ -59,6 +59,9 @@ class filter_imageopt extends moodle_text_filter {
         if (!isset($this->config->maxwidth)) {
             $this->config->maxwidth = 480;
         }
+        if (!isset($this->config->minduplicates)) {
+            $this->config->minduplicates = 0;
+        }
 
         parent::__construct($context, $localconfig);
     }
@@ -152,6 +155,10 @@ EOF;
         $originalpath = local::get_img_path_from_src($originalsrc);
         $urlpathid = local::add_url_path_to_queue($originalpath);
 
+        if ($file->get_imageinfo()['width'] <= $maxwidth && local::file_is_public($file)) {
+            $maxwidth = '-1';
+        }
+
         $url = $CFG->wwwroot.'/pluginfile.php/'.$contextid.'/filter_imageopt/'.$maxwidth.'/'.
                 $urlpathid.'/'.$filename;
 
@@ -165,9 +172,7 @@ EOF;
      * @return string
      */
     private function process_img_tag(array $match) {
-        global $CFG;
-
-        $fs = get_file_storage();
+        global $CFG, $DB;
 
         $maxwidth = $this->config->maxwidth;
 
@@ -194,11 +199,11 @@ EOF;
         }
 
         $imageinfo = (object) $file->get_imageinfo();
-        if ($imageinfo->width <= $maxwidth) {
+        if ($imageinfo->width <= $maxwidth && !local::file_is_public($file)) {
             return $match[0];
         }
 
-        $optimisedpath = local::get_optimised_path($match[3]);
+        $optimisedpath = local::get_optimised_path($file, $match[3]);
         $optimisedavailable = local::get_img_file($optimisedpath);
 
         $originalsrc = $match[2];
@@ -314,7 +319,7 @@ EOF;
 
         $maxwidth = $this->config->maxwidth;
 
-        if ($imageinfo->width < $maxwidth) {
+        if ($imageinfo->width < $maxwidth && !local::file_is_public($file)) {
             return $match[0];
         }
 

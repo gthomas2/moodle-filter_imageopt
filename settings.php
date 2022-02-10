@@ -55,4 +55,11 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configselect('filter_imageopt/widthattribute',
         get_string('widthattribute', 'filter_imageopt'),
         get_string('widthattributedesc', 'filter_imageopt'), local::WIDTH_ATT_PRESERVE_MAX, $choices));
+
+    $settings->add(new admin_setting_configtext(
+        'filter_imageopt/minduplicates',
+        get_string('minduplicates', 'filter_imageopt'),
+        get_string('minduplicatesdesc', 'filter_imageopt'),
+        0
+    ));
 }
