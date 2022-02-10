@@ -39,11 +39,32 @@ defined('MOODLE_INTERNAL') || die();
  * @return bool
  */
 function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = array()) {
+
+    $fs = get_file_storage();
+
+    if ($filearea == 'public') {
+        $path = '/' . context_system::instance()->id . '/filter_imageopt/public/1/imageopt/' . $args[2] . '/' . $args[3];
+        if (!$file = $fs->get_file_by_hash(sha1($path))) {
+            return false;
+        }
+
+        if (!local::file_is_public($file)) {
+            return false;
+        }
+
+        send_stored_file($file, YEARSECS, 0, false, [
+            'cacheability' => 'public',
+            'immutable' => true,
+        ]);
+    }
+
+    cache_helper::purge_by_definition('filter_imageopt', 'public_files');
     $urlpathid = clean_param($args[0], PARAM_INT);
     $originalimgpath = local::get_url_path_by_id($urlpathid);
     $originalfile = local::get_img_file($originalimgpath);
-    $optimisedpath = local::get_optimised_path($originalimgpath);
-    $optimisedurlpath = local::get_optimised_path($originalimgpath, false);
+    $optimisedurlpath = local::get_optimised_path($originalfile, $originalimgpath, false);
+    $optimisedpath = local::get_optimised_path($originalfile, $originalimgpath);
+    $fileispublic = local::file_is_public($originalfile);
     $optimisedfile = local::get_img_file($optimisedpath);
 
     if ($optimisedfile) {
@@ -51,15 +72,16 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
         die;
     }
 
-    $regex = '/imageopt\/(\d*)/';
+    $regex = '/\/imageopt\/(-1|\d*)/';
     $matches = [];
     preg_match($regex, $optimisedpath, $matches);
     $maxwidth = ($matches[1]);
+    $filename = $fileispublic ? $originalfile->get_contenthash() : $originalfile->get_filename();
 
     $originalts = $originalfile->get_timemodified();
 
     $imageinfo = (object) $originalfile->get_imageinfo();
-    if ($imageinfo->width <= $maxwidth) {
+    if ($imageinfo->width <= $maxwidth && !$fileispublic) {
         local::file_pluginfile(local::url_decode_path($originalimgpath));
         die;
     }
@@ -81,21 +103,32 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
             die;
         }
 
-        $filepos = array_search($originalfile->get_filename(), $pathcomps, true);
+        $filepos = array_search($filename, $pathcomps, true);
         $length = $filepos - $imageoptpos;
 
         $optimiseddirpath = '/'.implode('/', array_slice($pathcomps, $imageoptpos, $length)).'/';
 
         $filerecord = [
-            'contextid' => $originalfile->get_contextid(),
-            'component' => $originalfile->get_component(),
-            'filearea' => $originalfile->get_filearea(),
-            'itemid' => $originalfile->get_itemid(),
+            'filename' => $filename,
+            'contextid' => $fileispublic ? \context_system::instance()->id : $originalfile->get_contextid(),
+            'component' => $fileispublic ? 'filter_imageopt' : $originalfile->get_component(),
+            'filearea' => $fileispublic ? 'public' : $originalfile->get_filearea(),
+            'itemid' => $fileispublic ? 1 : $originalfile->get_itemid(),
             'filepath' => $optimiseddirpath
         ];
 
-        $fs = new file_storage();
-        $optimisedfile = $fs->convert_image($filerecord, $originalfile, $maxwidth);
+        if ($maxwidth == '-1') {
+            $new = new stdClass;
+            $new->contextid = context_system::instance()->id;
+            $new->component = 'filter_imageopt';
+            $new->filearea = 'public';
+            $new->filepath = $optimiseddirpath;
+            $new->filename = $filename;
+            $new->itemid = 1;
+            $optimisedfile = $fs->create_file_from_storedfile($new, $originalfile);
+        } else {
+            $optimisedfile = $fs->convert_image($filerecord, $originalfile, $maxwidth);
+        }
     }
 
     if (!$optimisedfile) {

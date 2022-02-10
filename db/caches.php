@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,15 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Image Optimiser
- * @author    Guy Thomas <dev@citri.city>
- * @copyright Copyright (c) 2016 Guy Thomas.
+ * Defined caches used internally by the plugin.
+ *
+ *
+ * @package   tool_hurdlefailgrade
+ * @copyright 2022 Catalyst IT Australia Pty Ltd
+ * @author Cameron Ball <cameron@cameron1729.xyz>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2022020800;
-$plugin->requires  = 2011111500;
-$plugin->component = 'filter_imageopt';
-$plugin->maturity  = MATURITY_BETA;
-$plugin->release   = '3.9.0.0';
+$definitions = [
+    'public_files' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'staticacceleration' => true
+    ]
+];

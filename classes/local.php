@@ -64,19 +64,26 @@ class local {
      * @param bool $asfilepath - if true will return the path for use with the file storage system, not urls.
      * @return string
      */
-    public static function get_optimised_path($filepath, $asfilepath = true) {
+    public static function get_optimised_path(\stored_file $file, $filepath, $asfilepath = true) {
         $maxwidth = get_config('filter_imageopt', 'maxwidth');
         if (empty($maxwidth)) {
             $maxwidth = 480;
         }
 
+        if ($file->get_imageinfo()['width'] <= $maxwidth && self::file_is_public($file)) {
+            $maxwidth = '-1';
+        }
+
+        if (self::file_is_public($file)) {
+            return '/' . \context_system::instance()->id . '/filter_imageopt/public/1/imageopt/' .
+                       $maxwidth . '/' . $file->get_contenthash();
+        }
+
         $pathcomps = self::explode_img_path($filepath);
         self::url_decode_path_components($pathcomps);
         if ($asfilepath) {
-            $component = $pathcomps[1];
-
             // See if we have component support for this component.
-            $classname = '\\filter_imageopt\\componentsupport\\'.$component;
+            $classname = '\\filter_imageopt\\componentsupport\\'.$file->get_component();
             if (class_exists($classname) && method_exists($classname, 'get_optimised_path')) {
                 $optimisedpath = $classname::get_optimised_path($pathcomps, $maxwidth);
                 if ($optimisedpath !== null) {
@@ -104,7 +111,7 @@ class local {
         global $CFG;
         $classname = '\\filter_imageopt\\componentsupport\\'.$file->get_component();
         $optimisedsrc = null;
-        if (class_exists($classname) && method_exists($classname, 'get_optimised_src')) {
+        if (!self::file_is_public($file) && class_exists($classname) && method_exists($classname, 'get_optimised_src')) {
             $optimisedsrc = $classname::get_optimised_src($file, $originalsrc);
         }
         if (empty($optimisedsrc)) {
@@ -257,5 +264,33 @@ class local {
         $offline = optional_param('offline', 0, PARAM_BOOL);
         $embed = optional_param('embed', 0, PARAM_BOOL);
         file_pluginfile($relativepath, $forcedownload, $preview, $offline, $embed);
+    }
+
+    public static function file_is_public(stored_file $file): bool {
+        global $DB;
+
+        $minduplicates = get_config('filter_imageopt', 'minduplicates');
+        $publicfilescache = \cache::make('filter_imageopt', 'public_files');
+        $key = 'public_files_' . $minduplicates;
+
+        if (empty($minduplicates)) {
+            return false;
+        }
+
+        if (!$publicfilescache->has($key)) {
+            $publicfiles = $DB->get_records_sql(
+                "SELECT contenthash, COUNT(contenthash)
+                   FROM {files}
+                  WHERE filearea <> 'draft'
+                    AND (filearea <> 'public' OR component <> 'filter_imageopt')
+               GROUP BY contenthash
+                 HAVING COUNT(contenthash) >= :count",
+                ['count' => $minduplicates]
+            );
+
+            $publicfilescache->set($key, array_column($publicfiles, 'contenthash'));
+        }
+
+        return in_array($file->get_contenthash(), $publicfilescache->get($key));
     }
 }
