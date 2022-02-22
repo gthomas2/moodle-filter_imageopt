@@ -86,49 +86,40 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
         die;
     }
 
-    // Make sure resized file is fresh.
-    if ($optimisedfile && ($optimisedfile->get_timemodified() < $originalts)) {
-        $optimisedfile->delete();
-        $optimisedfile = false;
+    $pathcomps = local::explode_img_path($optimisedpath);
+    local::url_decode_path_components($pathcomps);
+
+    $imageoptpos = array_search('imageopt', $pathcomps, true);
+    if ($imageoptpos === false) {
+        local::file_pluginfile(local::url_decode_path($originalimgpath));
+        die;
     }
 
-    if (!$optimisedfile) {
+    $filepos = array_search($filename, $pathcomps, true);
+    $length = $filepos - $imageoptpos;
 
-        $pathcomps = local::explode_img_path($optimisedpath);
-        local::url_decode_path_components($pathcomps);
+    $optimiseddirpath = '/' . implode('/', array_slice($pathcomps, $imageoptpos, $length)) . '/';
 
-        $imageoptpos = array_search('imageopt', $pathcomps, true);
-        if ($imageoptpos === false) {
-            local::file_pluginfile(local::url_decode_path($originalimgpath));
-            die;
-        }
+    $filerecord = [
+        'filename' => $filename,
+        'contextid' => $fileispublic ? \context_system::instance()->id : $originalfile->get_contextid(),
+        'component' => $fileispublic ? 'filter_imageopt' : $originalfile->get_component(),
+        'filearea' => $fileispublic ? 'public' : $originalfile->get_filearea(),
+        'itemid' => $fileispublic ? 1 : $originalfile->get_itemid(),
+        'filepath' => $optimiseddirpath
+    ];
 
-        $filepos = array_search($filename, $pathcomps, true);
-        $length = $filepos - $imageoptpos;
-
-        $optimiseddirpath = '/'.implode('/', array_slice($pathcomps, $imageoptpos, $length)).'/';
-
-        $filerecord = [
-            'filename' => $filename,
-            'contextid' => $fileispublic ? \context_system::instance()->id : $originalfile->get_contextid(),
-            'component' => $fileispublic ? 'filter_imageopt' : $originalfile->get_component(),
-            'filearea' => $fileispublic ? 'public' : $originalfile->get_filearea(),
-            'itemid' => $fileispublic ? 1 : $originalfile->get_itemid(),
-            'filepath' => $optimiseddirpath
-        ];
-
-        if ($maxwidth == '-1') {
-            $new = new stdClass;
-            $new->contextid = context_system::instance()->id;
-            $new->component = 'filter_imageopt';
-            $new->filearea = 'public';
-            $new->filepath = $optimiseddirpath;
-            $new->filename = $filename;
-            $new->itemid = 1;
-            $optimisedfile = $fs->create_file_from_storedfile($new, $originalfile);
-        } else {
-            $optimisedfile = $fs->convert_image($filerecord, $originalfile, $maxwidth);
-        }
+    if ($maxwidth == '-1') {
+        $new = new stdClass;
+        $new->contextid = context_system::instance()->id;
+        $new->component = 'filter_imageopt';
+        $new->filearea = 'public';
+        $new->filepath = $optimiseddirpath;
+        $new->filename = $filename;
+        $new->itemid = 1;
+        $optimisedfile = $fs->create_file_from_storedfile($new, $originalfile);
+    } else {
+        $optimisedfile = $fs->convert_image($filerecord, $originalfile, $maxwidth);
     }
 
     if (!$optimisedfile) {
