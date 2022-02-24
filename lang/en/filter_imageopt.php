@@ -20,6 +20,7 @@
  * @copyright Copyright (c) Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+$string['cachedef_public_files'] = 'Cache of public file contenthashes';
 $string['filtername'] = 'Image optimiser';
 $string['maxwidth'] = 'Maximum image width';
 $string['maxwidthdesc'] = 'Maximum image width in pixels';
@@ -33,3 +34,5 @@ $string['widthattributedesc'] = 'How should existing image width attributes be d
 $string['widthattpreserve'] = 'Preserve user width attributes in all cases';
 $string['widthattpreserveltmax'] = 'Preserve user width attributes only if less than maximum width';
 $string['privacy:metadata'] = 'The image optimiser filter creates optimised versions of pre-existing images. It does not store any information other than that relating to pre-existing images.';
+$string['minduplicates'] = 'Minimum duplicates';
+$string['minduplicatesdesc'] = 'This is the minimum number of duplicates needed before a file is considered to be effectively public. Once a file is detected as public, it will be given a canonical URL and will be possible for anyone with the URL to view it. If set to 0 duplicates will not be detected.';

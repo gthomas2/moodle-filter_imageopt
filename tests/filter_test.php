@@ -22,9 +22,19 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace filter_imageopt;
+
 defined('MOODLE_INTERNAL') || die();
 
-use filter_imageopt\local;
+use context;
+use moodle_url;
+use stored_file;
+use phpunit_util;
+use context_helper;
+use context_module;
+use context_system;
+use filter_imageopt;
+use advanced_testcase;
 
 global $CFG;
 
@@ -38,7 +48,7 @@ require_once(__DIR__.'/../filter.php');
  * @copyright Guy Thomas 2017.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class filter_imageopt_filter_testcase extends advanced_testcase {
+class filter_test extends advanced_testcase {
 
     /**
      * Test regex works with sample img tag + pluginfile.php src.
@@ -76,7 +86,6 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test empty svg image contains width and height params.
-     * @throws dml_exception
      */
     public function test_empty_image() {
         $filter = new filter_imageopt(context_system::instance(), []);
@@ -87,13 +96,12 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         ];
         foreach ($sizes as $size) {
             $emptyimage = phpunit_util::call_internal_method($filter, 'empty_image', $size, get_class($filter));
-            $this->assertContains('width="'.$size[0].'" height="'.$size[1].'"', $emptyimage);
+            $this->assertStringContainsString('width="'.$size[0].'" height="'.$size[1].'"', $emptyimage);
         }
     }
 
     /**
      * Test image opt url is created as expected.
-     * @throws dml_exception
      */
     public function test_image_opt_url() {
         global $CFG, $DB;
@@ -123,7 +131,6 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test img_add_width_height function.
-     * @throws dml_exception
      */
     public function test_img_add_width_height() {
         $this->resetAfterTest();
@@ -152,8 +159,6 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
      * @param context $context
      * @param string $fixturefile name of fixture file
      * @return stored_file
-     * @throws file_exception
-     * @throws stored_file_creation_exception
      */
     private function std_file_record(context $context, $fixturefile) {
         global $CFG;
@@ -178,10 +183,8 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test getting image from file path.
-     * @throws coding_exception
      */
     public function test_get_img_file() {
-
         $this->resetAfterTest();
         $this->setAdminUser();
         $dg = $this->getDataGenerator();
@@ -206,13 +209,10 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Return image file in label and return label text + regex matches.
+     * @param string $fixturefile The name of the file.
      * @return [string, array, stored_file]
-     * @throws coding_exception
-     * @throws file_exception
-     * @throws stored_file_creation_exception
      */
     private function create_image_file_text($fixturefile) {
-
         $dg = $this->getDataGenerator();
         $course = $dg->create_course();
         $plugin = $dg->get_plugin_generator('mod_label');
@@ -234,7 +234,6 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test apply load on visible.
-     * @throws coding_exception
      */
     public function test_apply_loadonvisible() {
         global $CFG;
@@ -271,16 +270,16 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         // Test filter plugin img, lazy load.
         $regex = '/img data-loadonvisible="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($loadonvisibleurl, '/')).'/';
-        $this->assertRegExp($regex, $str);
-        $this->assertContains('src="data:image/svg+xml;utf8,', $str);
+        $this->assertMatchesRegularExpression($regex, $str);
+        $this->assertStringContainsString('src="data:image/svg+xml;utf8,', $str);
 
     }
 
     /**
      * Get the replacement imageopt filter image url for a stored_file.
      * @param stored_file $file
-     * @param int $maxwidth;
-     * @return string.
+     * @param int $maxwidth
+     * @return string
      */
     private function filter_imageopt_url_from_file(stored_file $file, $maxwidth) {
         global $CFG;
@@ -293,7 +292,6 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
     /**
      * Test processing image src.
-     * @throws coding_exception
      */
     public function test_apply_img_tag() {
 
@@ -320,13 +318,12 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
 
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
         $regex = '/'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($postfilterurl, '/')).'/';
-        $this->assertRegExp($regex, $processed);
+        $this->assertMatchesRegularExpression($regex, $processed);
 
     }
 
     /**
      * Test main filter function.
-     * @throws coding_exception
      */
     public function test_filter() {
         global $CFG;
@@ -349,29 +346,29 @@ class filter_imageopt_filter_testcase extends advanced_testcase {
         $filter = new filter_imageopt($context, []);
         $filtered = $filter->filter($labeltxt);
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';
-        $this->assertContains($prefilterurl, $labeltxt);
+        $this->assertStringContainsString($prefilterurl, $labeltxt);
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
         $regex = '/src="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($postfilterurl, '/')).'/';
-        $this->assertRegExp($regex, $filtered);
+        $this->assertMatchesRegularExpression($regex, $filtered);
 
         // We need a space before src so it doesn't trigger on original-src.
-        $this->assertNotContains(' src="'.$prefilterurl, $filtered);
-        $this->assertNotContains('data-loadonvisible="'.$postfilterurl, $filtered);
-        $this->assertNotContains('data-loadonvisible="'.$prefilterurl, $filtered);
+        $this->assertStringNotContainsString(' src="'.$prefilterurl, $filtered);
+        $this->assertStringNotContainsString('data-loadonvisible="'.$postfilterurl, $filtered);
+        $this->assertStringNotContainsString('data-loadonvisible="'.$prefilterurl, $filtered);
 
         // Test filter plugin img,  lazy load.
         set_config('loadonvisible', '0', 'filter_imageopt');
         $filter = new filter_imageopt($context, []);
         $filtered = $filter->filter($labeltxt);
         $prefilterurl = $CFG->wwwroot.'/pluginfile.php/'.$context->id.'/mod_label/intro/0/testpng_2880x1800.png';
-        $this->assertContains($prefilterurl, $labeltxt);
+        $this->assertStringContainsString($prefilterurl, $labeltxt);
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
 
         $regex = '/data-loadonvisible="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($postfilterurl, '/')).'/';
-        $this->assertRegExp($regex, $filtered);
+        $this->assertMatchesRegularExpression($regex, $filtered);
 
-        $this->assertNotContains('data-loadonvisible="'.$prefilterurl, $filtered);
-        $this->assertNotContains('src="'.$postfilterurl, $filtered);
-        $this->assertNotContains('src="'.$prefilterurl, $filtered);
+        $this->assertStringNotContainsString('data-loadonvisible="'.$prefilterurl, $filtered);
+        $this->assertStringNotContainsString('src="'.$postfilterurl, $filtered);
+        $this->assertStringNotContainsString('src="'.$prefilterurl, $filtered);
     }
 }

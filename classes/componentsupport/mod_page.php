@@ -16,7 +16,8 @@
 
 /**
  * Image optimiser support for page component.
- * @package filter_imageopt
+ *
+ * @package   filter_imageopt
  * @author    Guy Thomas <dev@citri.city>
  * @copyright Copyright (c) 2020 Guy Thomas.
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -27,14 +28,34 @@ defined('MOODLE_INTERNAL') || die;
 
 use filter_imageopt\local;
 
+/**
+ * Image optimiser support for page component.
+ *
+ * @package   filter_imageopt
+ * @author    Guy Thomas <dev@citri.city>
+ * @copyright Copyright (c) 2020 Guy Thomas.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_page extends base_component {
 
+    /**
+     * Check that the component is 'mod_page'.
+     *
+     * @param array $pathcomponents - path split by /.
+     * @return \stored_file|null
+     */
     private static function check_component(array $pathcomponents) {
         if ($pathcomponents[1] !== 'mod_page') {
             throw new \coding_exception('Component is not a page ('.$pathcomponents[2].')');
         }
     }
 
+    /**
+     * Get the image file for the specified file path components.
+     *
+     * @param array $pathcomponents - path split by /.
+     * @return \stored_file|null
+     */
     public static function get_img_file(array $pathcomponents) {
         self::check_component($pathcomponents);
 
@@ -53,6 +74,13 @@ class mod_page extends base_component {
         return $file;
     }
 
+    /**
+     * Get the optimised path for specified file path.
+     *
+     * @param array $pathcomponents - path split by /.
+     * @param int $maxwidth
+     * @return string|null
+     */
     public static function get_optimised_path(array $pathcomponents, $maxwidth) {
         self::check_component($pathcomponents);
 
@@ -73,6 +101,13 @@ class mod_page extends base_component {
         return $optimisedpath;
     }
 
+    /**
+     * Return the optimised url for the specfied file and original src.
+     *
+     * @param \stored_file $file
+     * @param string $originalsrc
+     * @return \moodle_url
+     */
     public static function get_optimised_src(\stored_file $file, $originalsrc) {
         global $CFG;
 
