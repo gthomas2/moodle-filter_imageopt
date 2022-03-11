@@ -155,7 +155,7 @@ EOF;
         $originalpath = local::get_img_path_from_src($originalsrc);
         $urlpathid = local::add_url_path_to_queue($originalpath);
 
-        if ($file->get_imageinfo()['width'] <= $maxwidth && local::file_is_public($file)) {
+        if ($file->get_imageinfo()['width'] <= $maxwidth && local::file_is_public($file->get_contenthash())) {
             $maxwidth = '-1';
         }
 
@@ -199,7 +199,7 @@ EOF;
         }
 
         $imageinfo = (object) $file->get_imageinfo();
-        if ($imageinfo->width <= $maxwidth && !local::file_is_public($file)) {
+        if ($imageinfo->width <= $maxwidth && !local::file_is_public($file->get_contenthash())) {
             return $match[0];
         }
 
@@ -319,7 +319,7 @@ EOF;
 
         $maxwidth = $this->config->maxwidth;
 
-        if ($imageinfo->width < $maxwidth && !local::file_is_public($file)) {
+        if ($imageinfo->width < $maxwidth && !local::file_is_public($file->get_contenthash())) {
             return $match[0];
         }
 
