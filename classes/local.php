@@ -70,11 +70,11 @@ class local {
             $maxwidth = 480;
         }
 
-        if ($file->get_imageinfo()['width'] <= $maxwidth && self::file_is_public($file)) {
+        if ($file->get_imageinfo()['width'] <= $maxwidth && self::file_is_public($file->get_contenthash())) {
             $maxwidth = '-1';
         }
 
-        if (self::file_is_public($file)) {
+        if (self::file_is_public($file->get_contenthash())) {
             return '/' . \context_system::instance()->id . '/filter_imageopt/public/1/imageopt/' .
                        $maxwidth . '/' . $file->get_contenthash();
         }
@@ -111,7 +111,7 @@ class local {
         global $CFG;
         $classname = '\\filter_imageopt\\componentsupport\\'.$file->get_component();
         $optimisedsrc = null;
-        if (!self::file_is_public($file) && class_exists($classname) && method_exists($classname, 'get_optimised_src')) {
+        if (!self::file_is_public($file->get_contenthash()) && class_exists($classname) && method_exists($classname, 'get_optimised_src')) {
             $optimisedsrc = $classname::get_optimised_src($file, $originalsrc);
         }
         if (empty($optimisedsrc)) {
@@ -266,7 +266,7 @@ class local {
         file_pluginfile($relativepath, $forcedownload, $preview, $offline, $embed);
     }
 
-    public static function file_is_public(stored_file $file): bool {
+    public static function file_is_public(string $contenthash): bool {
         global $DB;
 
         $minduplicates = get_config('filter_imageopt', 'minduplicates');
@@ -291,6 +291,6 @@ class local {
             $publicfilescache->set($key, array_column($publicfiles, 'contenthash'));
         }
 
-        return in_array($file->get_contenthash(), $publicfilescache->get($key));
+        return in_array($contenthash, $publicfilescache->get($key));
     }
 }
