@@ -125,27 +125,27 @@ class local_test extends advanced_testcase {
         $filtered1 = $filter1->filter($labeltxt1);
 
         // Initial configuration, nothing should be detected as a duplicate.
-        $this->assertFalse(local::file_is_public(($file1)));
-        $this->assertFalse(local::file_is_public(($file2)));
+        $this->assertFalse(local::file_is_public(($file1->get_contenthash())));
+        $this->assertFalse(local::file_is_public(($file2->get_contenthash())));
 
         // Min duplicates exceeds 2, nothing should be detected as a duplicate.
         set_config('minduplicates', '3', 'filter_imageopt');
-        $this->assertFalse(local::file_is_public(($file1)));
-        $this->assertFalse(local::file_is_public(($file2)));
+        $this->assertFalse(local::file_is_public(($file1->get_contenthash())));
+        $this->assertFalse(local::file_is_public(($file2->get_contenthash())));
 
         // Min duplicates is equal to 2, both duplicates should be detected.
         set_config('minduplicates', '2', 'filter_imageopt');
-        $this->assertTrue(local::file_is_public(($file1)));
-        $this->assertTrue(local::file_is_public(($file2)));
+        $this->assertTrue(local::file_is_public(($file1->get_contenthash())));
+        $this->assertTrue(local::file_is_public(($file2->get_contenthash())));
 
         // Min duplicates is less than 2, both duplicates should be detected.
         set_config('minduplicates', '2', 'filter_imageopt');
-        $this->assertTrue(local::file_is_public(($file1)));
-        $this->assertTrue(local::file_is_public(($file2)));
+        $this->assertTrue(local::file_is_public(($file1->get_contenthash())));
+        $this->assertTrue(local::file_is_public(($file2->get_contenthash())));
 
         // Min duplicates is  0, nothing should be detected as a duplicate.
         set_config('minduplicates', '0', 'filter_imageopt');
-        $this->assertFalse(local::file_is_public(($file1)));
-        $this->assertFalse(local::file_is_public(($file2)));
+        $this->assertFalse(local::file_is_public(($file1->get_contenthash())));
+        $this->assertFalse(local::file_is_public(($file2->get_contenthash())));
     }
 }

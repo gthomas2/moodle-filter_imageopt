@@ -18,7 +18,7 @@
  * Defined caches used internally by the plugin.
  *
  *
- * @package   tool_hurdlefailgrade
+ * @package   filter_imageopt
  * @copyright 2022 Catalyst IT Australia Pty Ltd
  * @author Cameron Ball <cameron@cameron1729.xyz>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
