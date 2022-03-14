@@ -60,9 +60,11 @@ class local {
 
     /**
      * Get the optimised path for a file path - this is the path that get's written to the db as a hash.
-     * @param string $filepath
-     * @param bool $asfilepath - if true will return the path for use with the file storage system, not urls.
-     * @return string
+     *
+     * @param \stored_file $file
+     * @param mixed $filepath
+     * @param bool $asfilepath If true will return the path for use with the file storage system, not urls
+     * @return string the optimised path
      */
     public static function get_optimised_path(\stored_file $file, $filepath, $asfilepath = true) {
         $maxwidth = get_config('filter_imageopt', 'maxwidth');
@@ -266,6 +268,12 @@ class local {
         file_pluginfile($relativepath, $forcedownload, $preview, $offline, $embed);
     }
 
+    /**
+     * Returns true if a file is considered public.
+     *
+     * @param string $contenthash
+     * @return bool
+     */
     public static function file_is_public(string $contenthash): bool {
         global $DB;
 
