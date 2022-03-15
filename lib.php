@@ -48,7 +48,7 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
             return false;
         }
 
-        if (!local::file_is_public($file)) {
+        if (!local::file_is_public($args[3])) {
             return false;
         }
 
@@ -64,7 +64,7 @@ function filter_imageopt_pluginfile($course, $cm, $context, $filearea, $args, $f
     $originalfile = local::get_img_file($originalimgpath);
     $optimisedurlpath = local::get_optimised_path($originalfile, $originalimgpath, false);
     $optimisedpath = local::get_optimised_path($originalfile, $originalimgpath);
-    $fileispublic = local::file_is_public($originalfile);
+    $fileispublic = local::file_is_public($originalfile->get_contenthash());
     $optimisedfile = local::get_img_file($optimisedpath);
 
     if ($optimisedfile) {

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @package   filter_imgopt
+ * @module   filter_imageopt
  * @copyright Copyright (c) 2017 Guy Thomas
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
