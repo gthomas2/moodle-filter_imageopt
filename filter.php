@@ -304,11 +304,6 @@ EOF;
 
         raise_memory_limit(MEMORY_EXTRA);
 
-        $file = local::get_img_file($match[3]);
-        if (!$file) {
-            return $match[0];
-        }
-
         $imageinfo = (object) $file->get_imageinfo();
         if (empty($imageinfo) || !isset($imageinfo->width)) {
             return $match[0];
