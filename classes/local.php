@@ -279,26 +279,22 @@ class local {
 
         $minduplicates = get_config('filter_imageopt', 'minduplicates');
         $publicfilescache = \cache::make('filter_imageopt', 'public_files');
-        $key = 'public_files_' . $minduplicates;
+        $key = 'publicfiles' . '_' . $contenthash . '_' . $minduplicates;
 
         if (empty($minduplicates)) {
             return false;
         }
 
         if (!$publicfilescache->has($key)) {
-            $publicfiles = $DB->get_records_sql(
-                "SELECT contenthash, COUNT(contenthash)
-                   FROM {files}
-                  WHERE filearea <> 'draft'
-                    AND (filearea <> 'public' OR component <> 'filter_imageopt')
-               GROUP BY contenthash
-                 HAVING COUNT(contenthash) >= :count",
-                ['count' => $minduplicates]
+            $ocurrences = $DB->count_records_select(
+                'files',
+                "contenthash = :contenthash AND filearea <> 'draft' AND (filearea <> 'public' OR component <> 'filter_imageopt')",
+                ['contenthash' => $contenthash]
             );
 
-            $publicfilescache->set($key, array_column($publicfiles, 'contenthash'));
+            $publicfilescache->set($key, (int)($ocurrences >= $minduplicates));
         }
 
-        return in_array($contenthash, $publicfilescache->get($key));
+        return (bool)$publicfilescache->get($key);
     }
 }
