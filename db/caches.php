@@ -32,5 +32,11 @@ $definitions = [
         'simplekeys' => true,
         'simpledata' => true,
         'staticacceleration' => true
+    ],
+    'processed_img_tags' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'staticacceleration' => true
     ]
 ];
