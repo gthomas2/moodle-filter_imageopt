@@ -175,22 +175,31 @@ EOF;
         global $CFG, $DB;
 
         $maxwidth = $this->config->maxwidth;
+        $processedtagscache = \cache::make('filter_imageopt', 'processed_img_tags');
+        $key = md5($match[0]) . '_' . $maxwidth . '_' . $this->config->loadonvisible . '_' . $this->config->minduplicates;
+
+        if ($processedtagscache->has($key)) {
+            return $processedtagscache->get($key);
+        }
 
         $optimisedavailable = false;
 
         // Don't process images that aren't in this site or don't have a relative path.
         if (stripos($match[2], $CFG->wwwroot) === false && substr($match[2], 0, 1) != '/') {
+            $processedtagscache->set($key, $match[0]);
             return $match[0];
         }
 
         $file = local::get_img_file($match[3]);
 
         if (!$file) {
+            $processedtagscache->set($key, $match[0]);
             return $match[0];
         }
 
         // Generally, if anything is being exported then we don't want to mess with it.
         if ($file->get_filearea() === 'export') {
+            $processedtagscache->set($key, $match[0]);
             return $match[0];
         }
 
@@ -200,6 +209,7 @@ EOF;
 
         $imageinfo = (object) $file->get_imageinfo();
         if ($imageinfo->width <= $maxwidth && !local::file_is_public($file->get_contenthash())) {
+            $processedtagscache->set($key, $match[0]);
             return $match[0];
         }
 
@@ -215,10 +225,16 @@ EOF;
         }
 
         if (empty($this->config->loadonvisible) || $this->config->loadonvisible < 999) {
-            return $this->apply_loadonvisible($match, $file, $originalsrc, $optimisedsrc, $optimisedavailable);
+            $applied = $this->apply_loadonvisible($match, $file, $originalsrc, $optimisedsrc, $optimisedavailable);
         } else {
-            return $this->apply_img_tag($match, $file, $originalsrc, $optimisedsrc);
+            $applied = $this->apply_img_tag($match, $file, $originalsrc, $optimisedsrc);
         }
+
+        if ($optimisedavailable) {
+            $processedtagscache->set($key, $applied);
+        }
+
+        return $applied;
     }
 
     /**
@@ -303,11 +319,6 @@ EOF;
         }
 
         raise_memory_limit(MEMORY_EXTRA);
-
-        $file = local::get_img_file($match[3]);
-        if (!$file) {
-            return $match[0];
-        }
 
         $imageinfo = (object) $file->get_imageinfo();
         if (empty($imageinfo) || !isset($imageinfo->width)) {
