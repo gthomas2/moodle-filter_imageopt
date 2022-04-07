@@ -24,8 +24,6 @@
  */
 namespace filter_imageopt;
 
-defined('MOODLE_INTERNAL') || die();
-
 use stored_file;
 
 /**
@@ -113,7 +111,7 @@ class local {
         global $CFG;
         $classname = '\\filter_imageopt\\componentsupport\\'.$file->get_component();
         $optimisedsrc = null;
-        if (!self::file_is_public($file->get_contenthash()) && class_exists($classname) && method_exists($classname, 'get_optimised_src')) {
+        if (!self::file_is_public($file->get_contenthash()) && method_exists($classname, 'get_optimised_src')) {
             $optimisedsrc = $classname::get_optimised_src($file, $originalsrc);
         }
         if (empty($optimisedsrc)) {
