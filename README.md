@@ -1,7 +1,3 @@
-<a href="https://travis-ci.org/gthomas2/moodle-filter_imageopt">
-    <img src="https://travis-ci.org/gthomas2/moodle-filter_imageopt.svg?branch=master">
-</a>
-
 # Image optimiser filter
 The image optimiser filter is intended to solve the issue of high resolution images slowing down (and blocking) page
 loads.

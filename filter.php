@@ -24,7 +24,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-use filter_imageopt\image;
 use filter_imageopt\local;
 
 /**
@@ -41,6 +40,12 @@ class filter_imageopt extends moodle_text_filter {
      */
     private $config;
 
+    /**
+     * Constructor.
+     *
+     * @param context $context
+     * @param array $localconfig
+     */
     public function __construct(context $context, array $localconfig) {
         global $CFG;
 
@@ -48,16 +53,26 @@ class filter_imageopt extends moodle_text_filter {
 
         $this->config = get_config('filter_imageopt');
         if (!isset($this->config->widthattribute)) {
-            $this->config->widthattribute = image::WIDTHATTPRSERVELTMAX;
+            $this->config->widthattribute = local::WIDTH_ATT_PRESERVE_MAX;
         }
         $this->config->widthattribute = intval($this->config->widthattribute);
         if (!isset($this->config->maxwidth)) {
             $this->config->maxwidth = 480;
         }
+        if (!isset($this->config->minduplicates)) {
+            $this->config->minduplicates = 0;
+        }
 
         parent::__construct($context, $localconfig);
     }
 
+    /**
+     * Returns an empty image.
+     *
+     * @param int $width
+     * @param int $height
+     * @return string
+     */
     private function empty_image($width, $height) {
         // @codingStandardsIgnoreStart
         $svg = <<<EOF
@@ -85,7 +100,7 @@ EOF;
         $maxwidth = $this->config->maxwidth;
 
         if (stripos($img, ' width') !== false) {
-            if ($this->config->widthattribute === image::WIDTHATTPRSERVELTMAX) {
+            if ($this->config->widthattribute === local::WIDTH_ATT_PRESERVE_MAX) {
                 // Note - we cannot check for percentage widths as they are responsively variable.
                 $regex = '/(?<=\<img)(?:.*)width(?:\s|)=(?:"|\')(\d*)(?:px|)(?:"|\')/';
                 $matches = [];
@@ -140,16 +155,24 @@ EOF;
         $originalpath = local::get_img_path_from_src($originalsrc);
         $urlpathid = local::add_url_path_to_queue($originalpath);
 
+        if ($file->get_imageinfo()['width'] <= $maxwidth && local::file_is_public($file->get_contenthash())) {
+            $maxwidth = '-1';
+        }
+
         $url = $CFG->wwwroot.'/pluginfile.php/'.$contextid.'/filter_imageopt/'.$maxwidth.'/'.
                 $urlpathid.'/'.$filename;
 
         return new moodle_url($url);
     }
 
+    /**
+     * Process an image tag.
+     *
+     * @param array $match
+     * @return string
+     */
     private function process_img_tag(array $match) {
-        global $CFG;
-
-        $fs = get_file_storage();
+        global $CFG, $DB;
 
         $maxwidth = $this->config->maxwidth;
 
@@ -176,11 +199,11 @@ EOF;
         }
 
         $imageinfo = (object) $file->get_imageinfo();
-        if ($imageinfo->width <= $maxwidth) {
+        if ($imageinfo->width <= $maxwidth && !local::file_is_public($file->get_contenthash())) {
             return $match[0];
         }
 
-        $optimisedpath = local::get_optimised_path($match[3]);
+        $optimisedpath = local::get_optimised_path($file, $match[3]);
         $optimisedavailable = local::get_img_file($optimisedpath);
 
         $originalsrc = $match[2];
@@ -296,7 +319,7 @@ EOF;
 
         $maxwidth = $this->config->maxwidth;
 
-        if ($imageinfo->width < $maxwidth) {
+        if ($imageinfo->width < $maxwidth && !local::file_is_public($file->get_contenthash())) {
             return $match[0];
         }
 

@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - http://moodle.org/
+// This file is part of Moodle - https://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,31 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Privacy provider file.
+ * Defined caches used internally by the plugin.
+ *
  *
  * @package   filter_imageopt
- * @copyright Copyright (c) 2018 Guy Thomas
+ * @copyright 2022 Catalyst IT Australia Pty Ltd
+ * @author Cameron Ball <cameron@cameron1729.xyz>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace filter_imageopt\privacy;
+defined('MOODLE_INTERNAL') || die();
 
-/**
- * Privacy provider class.
- *
- * @package   filter_imageopt
- * @copyright Copyright (c) 2018 Guy Thomas
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class provider implements \core_privacy\local\metadata\null_provider {
-
-    /**
-     * Get the language string identifier with the component's language
-     * file to explain why this plugin stores no data.
-     *
-     * @return  string
-     */
-    public static function get_reason() : string {
-        return 'privacy:metadata';
-    }
-}
+$definitions = [
+    'public_files' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'staticacceleration' => true
+    ]
+];

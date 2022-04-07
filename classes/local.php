@@ -28,31 +28,64 @@ defined('MOODLE_INTERNAL') || die();
 
 use stored_file;
 
+/**
+ * Local class for local people (we'll have no trouble here).
+ *
+ * @package   filter_imageopt
+ * @author    Guy Thomas <brudinie@gmail.com>
+ * @copyright Copyright (c) 2017 Guy Thomas.
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class local {
 
-    const REGEXP_IMGSRC = '/<img\s[^\>]*(src=["|\']((?:.*)(pluginfile.php(?:.*)))["|\'])(?:.*)>/isU';
+    /**
+     * Always preserve a width attribute already in an image tag.
+     */
+    const WIDTH_ATT_PRESERVE = 0;
 
+    /**
+     * Only preserve a width attribute if it's less than the maximum width.
+     */
+    const WIDTH_ATT_PRESERVE_MAX = 1;
+
+    /**
+     * @var string REGEXP_IMGSRC The regular expression used to see if it is an image.
+     */
+    const REGEXP_IMGSRC = '/<img\s[^\>]*(src=["|\']((?:.*)(pluginfile\.php(?:.*)))["|\'|?])(?:.*)>/isU';
+
+    /**
+     * @var string REGEXP_SRC The regular expression used to see if pluginfile.php is in the source.
+     */
     const REGEXP_SRC = '/(?:.*)(pluginfile.php(?:.*))/';
 
     /**
      * Get the optimised path for a file path - this is the path that get's written to the db as a hash.
-     * @param string $filepath
-     * @param bool $asfilepath - if true will return the path for use with the file storage system, not urls.
-     * @return string
+     *
+     * @param \stored_file $file
+     * @param mixed $filepath
+     * @param bool $asfilepath If true will return the path for use with the file storage system, not urls
+     * @return string the optimised path
      */
-    public static function get_optimised_path($filepath, $asfilepath = true) {
+    public static function get_optimised_path(\stored_file $file, $filepath, $asfilepath = true) {
         $maxwidth = get_config('filter_imageopt', 'maxwidth');
         if (empty($maxwidth)) {
             $maxwidth = 480;
         }
 
+        if ($file->get_imageinfo()['width'] <= $maxwidth && self::file_is_public($file->get_contenthash())) {
+            $maxwidth = '-1';
+        }
+
+        if (self::file_is_public($file->get_contenthash())) {
+            return '/' . \context_system::instance()->id . '/filter_imageopt/public/1/imageopt/' .
+                       $maxwidth . '/' . $file->get_contenthash();
+        }
+
         $pathcomps = self::explode_img_path($filepath);
         self::url_decode_path_components($pathcomps);
         if ($asfilepath) {
-            $component = $pathcomps[1];
-
             // See if we have component support for this component.
-            $classname = '\\filter_imageopt\\componentsupport\\'.$component;
+            $classname = '\\filter_imageopt\\componentsupport\\'.$file->get_component();
             if (class_exists($classname) && method_exists($classname, 'get_optimised_path')) {
                 $optimisedpath = $classname::get_optimised_path($pathcomps, $maxwidth);
                 if ($optimisedpath !== null) {
@@ -80,7 +113,7 @@ class local {
         global $CFG;
         $classname = '\\filter_imageopt\\componentsupport\\'.$file->get_component();
         $optimisedsrc = null;
-        if (class_exists($classname) && method_exists($classname, 'get_optimised_src')) {
+        if (!self::file_is_public($file->get_contenthash()) && class_exists($classname) && method_exists($classname, 'get_optimised_src')) {
             $optimisedsrc = $classname::get_optimised_src($file, $originalsrc);
         }
         if (empty($optimisedsrc)) {
@@ -126,8 +159,7 @@ class local {
 
     /**
      * Delete queue item by url path.
-     * @param $urlpath
-     * @throws \dml_exception
+     * @param string $urlpath
      */
     public static function delete_queue_item_by_path($urlpath) {
         global $DB;
@@ -137,7 +169,7 @@ class local {
 
     /**
      * Gets an img path from image src attribute.
-     * @param type string $src
+     * @param string $src
      * @return array
      */
     public static function get_img_path_from_src($src) {
@@ -187,7 +219,7 @@ class local {
     /**
      * Get's an image file from the plugin file path.
      *
-     * @param str $pluginfilepath pluginfile.php/
+     * @param string $pluginfilepath pluginfile.php/
      * @return \stored_file
      */
     public static function get_img_file($pluginfilepath) {
@@ -220,6 +252,12 @@ class local {
         return $file;
     }
 
+    /**
+     * This function delegates file serving to individual plugins.
+     *
+     * @param string $relativepath
+     * @return void
+     */
     public static function file_pluginfile($relativepath) {
         $forcedownload = optional_param('forcedownload', 0, PARAM_BOOL);
         $preview = optional_param('preview', null, PARAM_ALPHANUM);
@@ -228,5 +266,39 @@ class local {
         $offline = optional_param('offline', 0, PARAM_BOOL);
         $embed = optional_param('embed', 0, PARAM_BOOL);
         file_pluginfile($relativepath, $forcedownload, $preview, $offline, $embed);
+    }
+
+    /**
+     * Returns true if a file is considered public.
+     *
+     * @param string $contenthash
+     * @return bool
+     */
+    public static function file_is_public(string $contenthash): bool {
+        global $DB;
+
+        $minduplicates = get_config('filter_imageopt', 'minduplicates');
+        $publicfilescache = \cache::make('filter_imageopt', 'public_files');
+        $key = 'public_files_' . $minduplicates;
+
+        if (empty($minduplicates)) {
+            return false;
+        }
+
+        if (!$publicfilescache->has($key)) {
+            $publicfiles = $DB->get_records_sql(
+                "SELECT contenthash, COUNT(contenthash)
+                   FROM {files}
+                  WHERE filearea <> 'draft'
+                    AND (filearea <> 'public' OR component <> 'filter_imageopt')
+               GROUP BY contenthash
+                 HAVING COUNT(contenthash) >= :count",
+                ['count' => $minduplicates]
+            );
+
+            $publicfilescache->set($key, array_column($publicfiles, 'contenthash'));
+        }
+
+        return in_array($contenthash, $publicfilescache->get($key));
     }
 }

@@ -14,11 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @package   filter_imgopt
+ * @module   filter_imageopt
  * @copyright Copyright (c) 2017 Guy Thomas
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 
 /**
  * Main initialising function.
@@ -26,7 +25,7 @@
 define(['filter_imageopt/appear'],
     function($) {
         return {
-            init:function() {
+            init: function() {
 
                 /**
                  * Load optimised image.
@@ -51,12 +50,12 @@ define(['filter_imageopt/appear'],
                         });
                     });
                     // Appear configuration - start loading images when they are out of the view port by 400px.
-                    var appearConf = {appeartopoffset : 100, appearleftoffset : 100};
+                    var appearConf = {appeartopoffset: 100, appearleftoffset: 100};
                     $('img[data-loadonvisible]').appear(appearConf);
                     $.force_appear();
 
                     /**
-                     * listen for hash changes / popstates.
+                     * Listen for hash changes / popstates.
                      */
                     (function() {
                         var lastHash = location.hash;
