@@ -200,7 +200,13 @@ EOF;
 
         $imageinfo = (object) $file->get_imageinfo();
         if ($imageinfo->width <= $maxwidth && !local::file_is_public($file->get_contenthash())) {
-            return $match[0];
+            if (empty($this->config->lovsmallimage) || $this->config->loadonvisible == 999) {
+                return $match[0];
+            } else {
+                // Apply load on visible.
+                $url = new \moodle_url($CFG->wwwroot . '/' . $match[3]);
+                return $this->apply_loadonvisible($match, $file, $url, $url);
+            }
         }
 
         $optimisedpath = local::get_optimised_path($file, $match[3]);
