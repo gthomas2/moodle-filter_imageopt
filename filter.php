@@ -200,7 +200,7 @@ EOF;
 
         $imageinfo = (object) $file->get_imageinfo();
         if ($imageinfo->width <= $maxwidth && !local::file_is_public($file->get_contenthash())) {
-            if (empty($this->config->lovsmallimage) || $this->config->loadonvisible == 999) {
+            if (empty($this->config->lovallimage) || $this->config->loadonvisible == 999) {
                 return $match[0];
             } else {
                 // Apply load on visible.

@@ -49,9 +49,9 @@ if ($ADMIN->fulltree) {
         get_string('loadonvisibledesc', 'filter_imageopt'), 5, $choices));
 
     $settings->add(new admin_setting_configcheckbox(
-        'filter_imageopt/lovsmallimage',
-        get_string('lovsmallimage', 'filter_imageopt'),
-        get_string('lovsmallimagedesc', 'filter_imageopt'),
+        'filter_imageopt/lovallimage',
+        get_string('lovallimage', 'filter_imageopt'),
+        get_string('lovallimagedesc', 'filter_imageopt'),
         0
     ));
 
