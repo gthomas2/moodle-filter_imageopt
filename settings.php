@@ -48,6 +48,13 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configselect('filter_imageopt/loadonvisible', get_string('loadonvisible', 'filter_imageopt'),
         get_string('loadonvisibledesc', 'filter_imageopt'), 5, $choices));
 
+    $settings->add(new admin_setting_configcheckbox(
+        'filter_imageopt/lovallimage',
+        get_string('lovallimage', 'filter_imageopt'),
+        get_string('lovallimagedesc', 'filter_imageopt'),
+        0
+    ));
+
     $choices = [
         local::WIDTH_ATT_PRESERVE_MAX => get_string('widthattpreserveltmax', 'filter_imageopt'),
         local::WIDTH_ATT_PRESERVE => get_string('widthattpreserve', 'filter_imageopt')
