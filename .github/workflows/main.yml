@@ -9,19 +9,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        moodle-branch: ['MOODLE_311_STABLE']
-        php: ['7.4']
+        moodle-branch: ['MOODLE_401_STABLE']
+        php: ['8.0']
         database: ['mysqli']
-        include:
-        - php: 8.0
-          moodle-branch: master
-          database: mysqli
 
     name: ${{ matrix.moodle-branch }}  php ${{ matrix.php }}  ${{ matrix.database }}
 
     steps:
       - name: checkout plugin
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: this-plugin
 
@@ -40,7 +36,6 @@ jobs:
            echo $(cd ci/vendor/bin; pwd) >> $GITHUB_PATH
            sudo locale-gen en_AU.UTF-8
            sudo systemctl start mysql.service
-           sed -i 's/phpdbg -d memory_limit=-1 -qrr//g' ci/src/Command/PHPUnitCommand.php
 
       - name: install Moodle
         run: moodle-plugin-ci install -v  --db-user=root --db-pass=root --db-host=127.0.0.1 --plugin this-plugin
