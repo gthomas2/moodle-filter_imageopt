@@ -24,8 +24,6 @@
 
 namespace filter_imageopt\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
 use \core_privacy\tests\provider_testcase;
 
 /**
@@ -39,7 +37,7 @@ class privacy_test extends provider_testcase {
 
     /**
      * Test returning metadata.
-     * @coversDefaultClass filter_iplus\privacy\provider
+     * @covers \filter_iplus\privacy\provider
      */
     public function test_get_metadata() {
         $privacy = new provider();

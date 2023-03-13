@@ -25,8 +25,6 @@
 
 namespace filter_imageopt\componentsupport;
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Abstract class.
  *

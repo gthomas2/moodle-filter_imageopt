@@ -24,8 +24,6 @@
  */
 namespace filter_imageopt;
 
-defined('MOODLE_INTERNAL') || die();
-
 use stored_file;
 
 /**

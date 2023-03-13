@@ -25,8 +25,6 @@
 use filter_imageopt\image;
 use filter_imageopt\local;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Serves any files associated with the image optimiser filter
  *

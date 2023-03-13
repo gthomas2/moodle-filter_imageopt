@@ -23,8 +23,6 @@
  */
 namespace filter_imageopt\componentsupport;
 
-defined('MOODLE_INTERNAL') || die;
-
 use filter_imageopt\local;
 
 /**
