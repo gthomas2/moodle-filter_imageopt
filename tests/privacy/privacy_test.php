@@ -37,7 +37,7 @@ class privacy_test extends provider_testcase {
 
     /**
      * Test returning metadata.
-     * @covers \filter_iplus\privacy\provider
+     * @covers \filter_imageopt\privacy\provider
      */
     public function test_get_metadata() {
         $privacy = new provider();

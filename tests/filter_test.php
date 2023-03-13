@@ -45,7 +45,7 @@ class filter_test extends \advanced_testcase {
 
     /**
      * Test regex works with sample img tag + pluginfile.php src.
-     * @covers \filter_iplus
+     * @covers \filter_imageopt
      */
     public function test_regex() {
         $regex = local::REGEXP_IMGSRC;
@@ -81,7 +81,7 @@ class filter_test extends \advanced_testcase {
     /**
      * Test empty svg image contains width and height params.
      * @throws \dml_exception
-     * @covers \filter_iplus
+     * @covers \filter_imageopt
      */
     public function test_empty_image() {
         $filter = new \filter_imageopt(\context_system::instance(), []);
@@ -99,7 +99,7 @@ class filter_test extends \advanced_testcase {
     /**
      * Test image opt url is created as expected.
      * @throws \dml_exception
-     * @covers \filter_iplus
+     * @covers \filter_imageopt
      */
     public function test_image_opt_url() {
         global $CFG, $DB;
@@ -130,7 +130,7 @@ class filter_test extends \advanced_testcase {
     /**
      * Test img_add_width_height function.
      * @throws \dml_exception
-     * @covers \filter_iplus
+     * @covers \filter_imageopt
      */
     public function test_img_add_width_height() {
         $this->resetAfterTest();
@@ -186,7 +186,8 @@ class filter_test extends \advanced_testcase {
     /**
      * Test getting image from file path.
      * @throws \coding_exception
-     * @covers \filter_iplus
+     * @covers \filter_imageopt\local
+     * @covers \filter_imageopt\image
      */
     public function test_get_img_file() {
 
@@ -241,7 +242,7 @@ class filter_test extends \advanced_testcase {
     /**
      * Test apply load on visible.
      * @throws coding_exception
-     * @covers \filter_iplus
+     * @covers \filter_imageopt
      */
     public function test_apply_loadonvisible() {
         global $CFG;
@@ -303,7 +304,7 @@ class filter_test extends \advanced_testcase {
      * Test processing image src.
      *
      * @throws \coding_exception
-     * @covers \filter_iplus
+     * @covers \filter_imageopt
      */
     public function test_apply_img_tag() {
 
@@ -337,7 +338,7 @@ class filter_test extends \advanced_testcase {
     /**
      * Test main filter function.
      * @throws \coding_exception
-     * @covers \filter_iplus
+     * @covers \filter_imageopt
      */
     public function test_filter() {
         global $CFG;
