@@ -15,15 +15,26 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Image Optimiser
- * @author    Guy Thomas <dev@citri.city>
- * @copyright Copyright (c) 2016 Guy Thomas.
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package filter_imageopt
+ * @author Andrew Hancox <andrewdchancox@googlemail.com>
+ * @author Open Source Learning <enquiries@opensourcelearning.co.uk>
+ * @link https://opensourcelearning.co.uk
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2024, Andrew Hancox
  */
+
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2024013101;
-$plugin->requires  = 2011111500;
-$plugin->component = 'filter_imageopt';
-$plugin->maturity  = MATURITY_BETA;
-$plugin->release   = '3.9.0.0';
+$tasks = [
+        [
+                'classname' => '\filter_imageopt\task\expirequeue',
+                'blocking'  => 0,
+                'minute'    => '0',
+                'hour'      => '0',
+                'day'       => '*',
+                'month'     => '*',
+                'dayofweek' => '*',
+                'disabled'  => 0
+        ],
+];
+

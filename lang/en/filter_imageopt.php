@@ -21,6 +21,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 $string['cachedef_public_files'] = 'Cache of public file contenthashes';
+$string['expirequeuetask'] = 'Expire queued images';
 $string['filtername'] = 'Image optimiser';
 $string['maxwidth'] = 'Maximum image width';
 $string['maxwidthdesc'] = 'Maximum image width in pixels';

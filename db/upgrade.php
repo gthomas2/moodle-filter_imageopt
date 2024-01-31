@@ -60,6 +60,25 @@ function xmldb_filter_imageopt_upgrade($oldversion) {
         // Imageopt savepoint reached.
         upgrade_plugin_savepoint(true, 2018061803, 'filter', 'imageopt');
     }
+    if ($oldversion < 2024013100) {
+
+        // Define index urlpath (unique) to be dropped form filter_imageopt.
+        $table = new xmldb_table('filter_imageopt');
+        $index = new xmldb_index('urlpath', XMLDB_INDEX_UNIQUE, ['urlpath']);
+
+        // Conditionally launch drop index urlpath.
+        if ($dbman->index_exists($table, $index)) {
+            $dbman->drop_index($table, $index);
+        }
+
+        $field = new xmldb_field('urlpath', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null, 'id');
+
+        // Launch change of type for field urlpath.
+        $dbman->change_field_type($table, $field);
+
+        // Imageopt savepoint reached.
+        upgrade_plugin_savepoint(true, 2024013100, 'filter', 'imageopt');
+    }
 
     return true;
 }
