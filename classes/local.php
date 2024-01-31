@@ -26,6 +26,7 @@ namespace filter_imageopt;
 
 defined('MOODLE_INTERNAL') || die();
 
+use core_text;
 use stored_file;
 
 /**
@@ -132,7 +133,13 @@ class local {
     public static function add_url_path_to_queue($path) {
         global $DB;
 
-        $existing = $DB->get_record('filter_imageopt', ['urlpath' => $path]);
+        $existing = $DB->get_record_select(
+            'filter_imageopt',
+            $DB->sql_compare_text('urlpath', core_text::strlen($path)) . '= :path',
+            ['path' => $path],
+            '*',
+            IGNORE_MULTIPLE // It's very unlikely but there is a possible race condition where multiple records exist.
+        );
         if ($existing) {
             return $existing->id;
         }
@@ -164,7 +171,11 @@ class local {
     public static function delete_queue_item_by_path($urlpath) {
         global $DB;
 
-        $DB->delete_records('filter_imageopt', ['urlpath' => $urlpath]);
+        $DB->delete_records_select(
+            'filter_imageopt',
+            $DB->sql_compare_text('urlpath', core_text::strlen($urlpath)) . '= :path',
+            ['path' => $urlpath]
+        );
     }
 
     /**

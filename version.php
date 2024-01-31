@@ -22,7 +22,7 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2022020800;
+$plugin->version   = 2024013100;
 $plugin->requires  = 2011111500;
 $plugin->component = 'filter_imageopt';
 $plugin->maturity  = MATURITY_BETA;

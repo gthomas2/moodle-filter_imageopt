@@ -27,6 +27,7 @@ namespace filter_imageopt;
 defined('MOODLE_INTERNAL') || die();
 
 use context;
+use core_text;
 use moodle_url;
 use stored_file;
 use phpunit_util;
@@ -121,7 +122,11 @@ class filter_test extends advanced_testcase {
 
         $url = phpunit_util::call_internal_method($filter, 'image_opt_url', [$file, $originalurl], get_class($filter));
 
-        $row = $DB->get_record('filter_imageopt', ['urlpath' => 'pluginfile.php/somefile.jpg']);
+        $path = "pluginfile.php/somefile.jpg";
+        $row = $DB->get_record_select(
+            'filter_imageopt',
+            $DB->sql_compare_text('urlpath', core_text::strlen($path)) . "= '{$path}'"
+        );
         $urlpathid = $row->id;
 
         $expected = new moodle_url(
