@@ -270,7 +270,7 @@ class filter_test extends advanced_testcase {
 
         // Test filter plugin img, lazy load.
         $regex = '/img data-loadonvisible="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($loadonvisibleurl, '/')).'/';
-        $this->assertMatchesRegularExpression($regex, $str);
+        $this->assertRegExp($regex, $str);
         $this->assertStringContainsString('src="data:image/svg+xml;utf8,', $str);
 
     }
@@ -318,7 +318,7 @@ class filter_test extends advanced_testcase {
 
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
         $regex = '/'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($postfilterurl, '/')).'/';
-        $this->assertMatchesRegularExpression($regex, $processed);
+        $this->assertRegExp($regex, $processed);
 
     }
 
@@ -349,7 +349,7 @@ class filter_test extends advanced_testcase {
         $this->assertStringContainsString($prefilterurl, $labeltxt);
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
         $regex = '/src="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($postfilterurl, '/')).'/';
-        $this->assertMatchesRegularExpression($regex, $filtered);
+        $this->assertRegExp($regex, $filtered);
 
         // We need a space before src so it doesn't trigger on original-src.
         $this->assertStringNotContainsString(' src="'.$prefilterurl, $filtered);
@@ -365,7 +365,7 @@ class filter_test extends advanced_testcase {
         $postfilterurl = $this->filter_imageopt_url_from_file($file, $maxwidth);
 
         $regex = '/data-loadonvisible="'.str_replace('~pathid~', '(?:[0-9]*)', preg_quote($postfilterurl, '/')).'/';
-        $this->assertMatchesRegularExpression($regex, $filtered);
+        $this->assertRegExp($regex, $filtered);
 
         $this->assertStringNotContainsString('data-loadonvisible="'.$prefilterurl, $filtered);
         $this->assertStringNotContainsString('src="'.$postfilterurl, $filtered);
